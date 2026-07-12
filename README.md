@@ -96,3 +96,6 @@ Open source — [AGPL-3.0](LICENSE). Commercial — contact ahoy@42labs.io.
 ---
 Built by [42labs](https://github.com/4242labs). Not affiliated with
 [Firefly III](https://github.com/firefly-iii/firefly-iii).
+
+---
+If it earned its keep, [coffee is appreciated](https://buymeacoffee.com/42piratas). ☕
