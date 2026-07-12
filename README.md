@@ -92,8 +92,8 @@ Fixtures in `web/src/fixtures/` are synthetic — no real financial data.
 
 ## License
 
-Dual-licensed: **[AGPL-3.0](LICENSE)** for open-source use, or a **commercial
-license** for closed-source / SaaS use — **ahoy@42labs.io**.
+Open source — [AGPL-3.0](LICENSE). Commercial — contact ahoy@42labs.io.
 
 ---
-Built by [42labs](https://github.com/4242labs). Not affiliated with Firefly III.
+Built by [42labs](https://github.com/4242labs). Not affiliated with
+[Firefly III](https://github.com/firefly-iii/firefly-iii).
