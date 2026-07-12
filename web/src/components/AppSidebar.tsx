@@ -30,21 +30,12 @@ export function AppSidebar({ activeView = 'forecast' }: { activeView?: string })
   return (
     <Sidebar collapsible="icon">
       {/*
-       * Header spacing is a direct port of the DS's own sidebar (`.ds-side-head`),
-       * not an approximation:
-       *   .ds-side-head            { gap: 22px; padding: 28px 16px 22px; }
-       *   .ds-side-head .brand     { flex-direction: row; gap: 8px; margin: 12px 0; }
-       *   .ds-side-head .brand svg { width: 42px; height: 42px; }   // mark
-       *   [data-collapsible=icon]  { padding: 16px 0 8px; gap: 0; align-items: center; }
-       *   [data-collapsible=icon] .brand svg { width: 26px; height: 26px; }
-       * The FF3E wordmark's viewBox is a tight cap-height box, so its CSS height
-       * IS its cap height — 21px, matching the optical size of the DS wordmark
-       * in the same lockup.
+       * Header spacing: 28/16/22 padding, 22px gap, a 42px mark; the collapsed
+       * icon rail drops to 16/0/8 with a 26px mark. The FF3E wordmark's viewBox
+       * is a tight cap-height box, so its CSS height IS its cap height (21px).
        */}
       <SidebarHeader className="gap-[22px] px-[16px] pt-[28px] pb-[22px] group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:pt-[16px] group-data-[collapsible=icon]:pb-[8px]">
-        {/* justify-center: DS's `.brand` sets `justify-content: center;
-            align-items: center`, and `.ds-side-head .brand` only overrides
-            flex-direction to row — so the lockup stays CENTRED in the panel. */}
+        {/* The lockup is CENTRED in the panel, not left-aligned. */}
         <div className="my-[12px] flex flex-row items-center justify-center gap-[8px] group-data-[collapsible=icon]:m-0">
           <BrandMark className="h-[42px] w-[42px] shrink-0 text-[var(--logo)] group-data-[collapsible=icon]:h-[26px] group-data-[collapsible=icon]:w-[26px]" />
           <Wordmark className="h-[21px] text-[var(--logo)] group-data-[collapsible=icon]:hidden" />

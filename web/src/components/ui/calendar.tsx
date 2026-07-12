@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
-/** shadcn Calendar over react-day-picker v10, styled from DS tokens only. */
+/** shadcn Calendar over react-day-picker v10, styled from design tokens only. */
 export function Calendar({ className, classNames, showOutsideDays = true, ...props }: CalendarProps) {
   return (
     <DayPicker

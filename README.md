@@ -77,8 +77,7 @@ FIREFLY_III_URL=... FIREFLY_III_TOKEN=... uvicorn main:app --reload
 cd web && npm install && npm run dev
 ```
 
-Vite · React · TypeScript · Tailwind v4 · shadcn/ui · Recharts, on the
-[42labs Design System](https://github.com/4242labs/design-system) tokens.
+Vite · React · TypeScript · Tailwind v4 · shadcn/ui · Recharts.
 Fixtures in `web/src/fixtures/` are synthetic — no real financial data.
 
 ## Configuration

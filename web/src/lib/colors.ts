@@ -1,10 +1,10 @@
 import type { ItemStatus } from './types'
 
 /**
- * Fixed categorical chart ramp — DS raw-palette vars, cycled
+ * Fixed categorical chart ramp — raw-palette vars, cycled
  * if there are more than 10 series. Passed straight to Recharts as
- * `fill="var(--orange-500)"` etc. (also spec-directed) so colours track the
- * DS at runtime instead of baking in literals.
+ * `fill="var(--orange-500)"` etc. so colours track the
+ * the token layer at runtime instead of baking in literals.
  */
 export const CATEGORICAL_RAMP = [
   'var(--orange-500)',

@@ -1,9 +1,9 @@
 import { cn } from '@/lib/utils'
 
 /**
- * 42labs logomark — the asterisk, doubling as the FF3 Entropy product mark and
- * the favicon (public/icon.svg). Single source; `fill=currentColor` so it
- * inherits the surrounding text colour (tinted with `--logo` in the sidebar).
+ * The logomark — an asterisk, doubling as the product mark and the favicon
+ * (public/icon.svg). Single source; `fill=currentColor` so it inherits the
+ * surrounding text colour (tinted with `--logo` in the sidebar).
  */
 export function BrandMark({ className }: { className?: string }) {
   return (

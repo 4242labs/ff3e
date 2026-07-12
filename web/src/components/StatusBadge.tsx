@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 
 /**
  * Colour-by-status badge. Token-driven only — no raw hex.
- * Design decision (undocumented by the spec beyond the colour mapping):
+ * Design decision:
  * paid/done/received are routine outcomes and get a solid fill; upcoming is
  * quiet (soft/outline); needs_review must read as a warning, so it gets a
  * soft warm fill with solid-coloured text/border rather than a full solid

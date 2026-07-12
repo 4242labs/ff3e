@@ -4,15 +4,14 @@
  * Tailwind v4 CSS-first config — there is no tailwind.config.js or
  * postcss.config.js. Colours/fonts/radii are declared here as `@theme
  * inline` so utilities (bg-background, text-fg-muted, rounded-lg, …) resolve
- * to the shadcn<->DS bridge vars at RUNTIME — which is what lets the whole
+ * to the shadcn<->token bridge vars at RUNTIME — which is what lets the whole
  * palette flip on `body.theme-dark` without a rebuild. The bridge var
  * definitions themselves live in bridge.css (imported before this file);
- * the DS raw+semantic tokens in tokens.latest.css (imported first).
+ * the raw + semantic tokens in tokens.latest.css (imported first).
  */
 
-/* Our dark theme toggles `body.theme-dark`, not `.dark` — point the shadcn
-   `dark:` variant at it so vendored primitives (input, etc.) resolve. Mirrors
-   the DS's own globals.css. */
+/* The dark theme toggles `body.theme-dark`, not `.dark` — point the shadcn
+   `dark:` variant at it so vendored primitives (input, etc.) resolve. */
 @custom-variant dark (&:is(body.theme-dark, body.theme-dark *));
 
 @theme inline {
@@ -44,7 +43,7 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* shadcn sidebar contract -> DS tokens (see bridge.css). */
+  /* shadcn sidebar contract -> design tokens (see bridge.css). */
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);

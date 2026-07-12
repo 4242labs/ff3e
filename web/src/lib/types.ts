@@ -1,4 +1,4 @@
-// Shape of GET /projections/data, per spec §3 (locked; do not re-derive).
+// Shape of GET /api/forecast.
 
 export type ItemType = 'withdrawal' | 'deposit' | 'transfer'
 export type ItemStatus = 'paid' | 'received' | 'done' | 'upcoming' | 'needs_review'

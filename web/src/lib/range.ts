@@ -37,14 +37,14 @@ export interface RangeQuery {
   end: string
 }
 
-/** Today as a local ISO date — the default anchor ("current" period, §view-1). */
+/** Today as a local ISO date — the default anchor (the "current" period). */
 export function todayISO(today: Date = new Date()): string {
   return isoDate(today)
 }
 
 /**
  * The single period containing `anchor`, as a start/end window the engine can
- * serve (§view-1: day/month/year show ONE period at a time, not a stacked
+ * serve (day/month/year show ONE period at a time, not a stacked
  * range). Day → that day; Month → 1st…last of its month; Year → Jan 1…Dec 31.
  */
 export function singlePeriodRange(granularity: Granularity, anchor: string): RangeQuery {

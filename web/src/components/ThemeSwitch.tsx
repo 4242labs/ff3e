@@ -13,10 +13,9 @@ function readInitialTheme(): Theme {
 }
 
 /**
- * DS `.theme-switch`: a 2-up segmented control, mono/uppercase, sitting under
- * the brand lockup in the sidebar header (ported from the design system's own
- * sidebar rather than re-invented). Toggles `body.theme-dark`, which is what
- * the DS tokens + shadcn bridge key off. Hidden on the collapsed icon rail.
+ * A 2-up segmented control (LIGHT / DARK), mono and uppercase, sitting under the
+ * brand lockup in the sidebar header. Toggles `body.theme-dark`, which is what
+ * the design tokens + shadcn bridge key off. Hidden on the collapsed icon rail.
  */
 export function ThemeSwitch() {
   const [theme, setTheme] = useState<Theme>(() =>

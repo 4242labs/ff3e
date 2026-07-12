@@ -17,7 +17,7 @@ import { formatMoney } from '@/lib/format'
 import type { Period } from '@/lib/types'
 
 export interface PeriodBarProps {
-  periods: Period[] // a single period in §view-1 (one day/month/year at a time)
+  periods: Period[] // normally exactly one (day/month/year show one at a time)
   availableCurrencies: string[]
 }
 
@@ -52,7 +52,7 @@ interface Row {
 
 /**
  * Single-period In / Out / Net as a diverging horizontal bar around a zero
- * axis (§view-3, "try it"): income extends right (emerald), expense left
+ * axis: income extends right (emerald), expense left
  * (red), net is the signed remainder (blue). With one period on screen a
  * time-series bar had nothing to trend, so this reads the three totals
  * directly instead.
@@ -70,7 +70,7 @@ export function PeriodBar({ periods, availableCurrencies }: PeriodBarProps) {
 
   const data = useMemo<Row[]>(() => {
     if (!currency) return []
-    // Sum across the given periods (normally exactly one, per §view-1).
+    // Sum across the given periods (normally exactly one).
     let out = 0
     let inflow = 0
     for (const p of periods) {

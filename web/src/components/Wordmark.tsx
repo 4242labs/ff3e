@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils'
 
 /**
- * The "FF3E" wordmark as an SVG (crisp at any size), set in the DS heading face
+ * The "FF3E" wordmark as an SVG (crisp at any size), set in the heading face
  * Space Grotesk. The viewBox is the measured glyph run at font-size 100 (width
  * 219, cap height 70 — all caps, no descender), so the box IS the letterforms:
  * the mark aligns optically with the asterisk beside it with no stray padding.
