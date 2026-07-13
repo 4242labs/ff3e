@@ -2,9 +2,7 @@
 
 ![FF3 Entropy — Outstanding view showing an overdue backlog, a needs-review item, and income/expense totals](docs/forecast.png)
 
-**Live demo (100% synthetic data — no Firefly III instance behind it):**
-[4242labs.github.io/ff3-entropy](https://4242labs.github.io/ff3-entropy/) — goes live once GitHub Pages
-is enabled for this repo; until then that link 404s.
+**[Live demo →](https://ff3-entropy.42labs.io)** — 100% synthetic data, no Firefly III instance behind it.
 
 **What's coming, and whether it actually happened.**
 
