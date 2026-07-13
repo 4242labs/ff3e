@@ -80,7 +80,7 @@ export function AppSidebar({ activeView = 'forecast' }: { activeView?: string })
         {/* Row 1 — licence + source, icons only */}
         <div className="flex items-center justify-center gap-[16px]">
           <a
-            href="https://github.com/4242labs/FF3-Entropy/blob/main/LICENSE"
+            href="https://github.com/4242labs/ff3-entropy/blob/main/LICENSE"
             target="_blank"
             rel="noreferrer"
             aria-label="AGPL-3.0 licence"
@@ -90,7 +90,7 @@ export function AppSidebar({ activeView = 'forecast' }: { activeView?: string })
             <img src="opensource.svg" alt="AGPL-3.0 licence" className="h-[24px] w-[24px]" />
           </a>
           <a
-            href="https://github.com/4242labs/FF3-Entropy"
+            href="https://github.com/4242labs/ff3-entropy"
             target="_blank"
             rel="noreferrer"
             aria-label="Source on GitHub"

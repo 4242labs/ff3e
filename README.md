@@ -104,6 +104,7 @@ sees the product's whole point without connecting anything.
 ## License
 
 Open source — [AGPL-3.0](LICENSE). Commercial — contact ahoy@42labs.io.
+Both, in full: [LICENSING.md](LICENSING.md).
 
 ---
 Built by [42labs](https://github.com/4242labs). Not affiliated with
