@@ -1,0 +1,370 @@
+{
+  "range": {
+    "start": "2026-02-01",
+    "end": "2026-09-30",
+    "granularity": "month"
+  },
+  "filters": {
+    "type": null,
+    "category": null,
+    "account": null,
+    "currency": null
+  },
+  "currencies": {
+    "BRL": {
+      "out": 2045.45,
+      "in": 0.0,
+      "net": -2045.45
+    },
+    "USD": {
+      "out": 216.0,
+      "in": 5300.0,
+      "net": 5084.0
+    }
+  },
+  "periods": [
+    {
+      "key": "2026-02",
+      "label": "Feb 2026",
+      "items": [
+        {
+          "date": "2026-02-03",
+          "title": "Comet Coffee Roasters (monthly)",
+          "type": "withdrawal",
+          "amount": 42.9,
+          "currency": "BRL",
+          "source": "Rewards Card",
+          "destination": "Comet Coffee Roasters",
+          "category": "Leisure",
+          "status": "paid",
+          "matched_txn_id": null
+        },
+        {
+          "date": "2026-02-18",
+          "title": "Nebula Cloud Hosting (monthly)",
+          "type": "withdrawal",
+          "amount": 24.0,
+          "currency": "USD",
+          "source": "Rewards Card",
+          "destination": "Nebula Cloud Hosting",
+          "category": "Infrastructure",
+          "status": "needs_review",
+          "matched_txn_id": null
+        }
+      ],
+      "totals": {
+        "BRL": { "out": 42.9 },
+        "USD": { "out": 24.0 }
+      },
+      "status_counts": {
+        "paid": 1,
+        "needs_review": 1
+      }
+    },
+    {
+      "key": "2026-03",
+      "label": "Mar 2026",
+      "items": [
+        {
+          "date": "2026-03-05",
+          "title": "Falcon Freelance Client (invoice #1042)",
+          "type": "deposit",
+          "amount": 1200.0,
+          "currency": "USD",
+          "source": "Falcon Freelance Client",
+          "destination": "Checking",
+          "category": null,
+          "status": "received",
+          "matched_txn_id": null
+        },
+        {
+          "date": "2026-03-20",
+          "title": "Aurora Gym & Yoga (monthly)",
+          "type": "withdrawal",
+          "amount": 189.9,
+          "currency": "BRL",
+          "source": "Rewards Card",
+          "destination": "Aurora Gym & Yoga",
+          "category": "Health",
+          "status": "needs_review",
+          "matched_txn_id": null
+        }
+      ],
+      "totals": {
+        "USD": { "in": 1200.0 },
+        "BRL": { "out": 189.9 }
+      },
+      "status_counts": {
+        "received": 1,
+        "needs_review": 1
+      }
+    },
+    {
+      "key": "2026-04",
+      "label": "Apr 2026",
+      "items": [
+        {
+          "date": "2026-04-02",
+          "title": "Checking → Savings (auto-sweep)",
+          "type": "transfer",
+          "amount": 500.0,
+          "currency": "BRL",
+          "source": "Checking",
+          "destination": "Savings",
+          "category": null,
+          "status": "done",
+          "matched_txn_id": null
+        },
+        {
+          "date": "2026-04-18",
+          "title": "Lighthouse Insurance Co (monthly)",
+          "type": "withdrawal",
+          "amount": 245.5,
+          "currency": "BRL",
+          "source": "Rewards Card",
+          "destination": "Lighthouse Insurance Co",
+          "category": "Insurance",
+          "status": "needs_review",
+          "matched_txn_id": null
+        }
+      ],
+      "totals": {
+        "BRL": { "xfer": 500.0, "out": 245.5 }
+      },
+      "status_counts": {
+        "done": 1,
+        "needs_review": 1
+      }
+    },
+    {
+      "key": "2026-05",
+      "label": "May 2026",
+      "items": [
+        {
+          "date": "2026-05-03",
+          "title": "Northwind Consulting (invoice #1043)",
+          "type": "deposit",
+          "amount": 850.0,
+          "currency": "USD",
+          "source": "Northwind Consulting",
+          "destination": "Checking",
+          "category": null,
+          "status": "needs_review",
+          "matched_txn_id": null
+        },
+        {
+          "date": "2026-05-22",
+          "title": "Echo Music Streaming (monthly)",
+          "type": "withdrawal",
+          "amount": 34.9,
+          "currency": "BRL",
+          "source": "Rewards Card",
+          "destination": "Echo Music Streaming",
+          "category": "Leisure",
+          "status": "needs_review",
+          "matched_txn_id": null
+        }
+      ],
+      "totals": {
+        "USD": { "in": 850.0 },
+        "BRL": { "out": 34.9 }
+      },
+      "status_counts": {
+        "needs_review": 2
+      }
+    },
+    {
+      "key": "2026-06",
+      "label": "Jun 2026",
+      "items": [
+        {
+          "date": "2026-06-09",
+          "title": "Momentum Language School (monthly)",
+          "type": "withdrawal",
+          "amount": 79.0,
+          "currency": "USD",
+          "source": "Rewards Card",
+          "destination": "Momentum Language School",
+          "category": "Education",
+          "status": "needs_review",
+          "matched_txn_id": null
+        },
+        {
+          "date": "2026-06-25",
+          "title": "Juniper Grocery Co-op (biweekly)",
+          "type": "withdrawal",
+          "amount": 412.35,
+          "currency": "BRL",
+          "source": "Checking",
+          "destination": "Juniper Grocery Co-op",
+          "category": "Groceries",
+          "status": "paid",
+          "matched_txn_id": null
+        }
+      ],
+      "totals": {
+        "USD": { "out": 79.0 },
+        "BRL": { "out": 412.35 }
+      },
+      "status_counts": {
+        "needs_review": 1,
+        "paid": 1
+      }
+    },
+    {
+      "key": "2026-07",
+      "label": "Jul 2026",
+      "items": [
+        {
+          "date": "2026-07-03",
+          "title": "Solstice Design Tools (monthly)",
+          "type": "withdrawal",
+          "amount": 45.0,
+          "currency": "USD",
+          "source": "Rewards Card",
+          "destination": "Solstice Design Tools",
+          "category": "Subscriptions",
+          "status": "needs_review",
+          "matched_txn_id": null
+        },
+        {
+          "date": "2026-07-05",
+          "title": "Falcon Freelance Client (invoice #1044)",
+          "type": "deposit",
+          "amount": 1200.0,
+          "currency": "USD",
+          "source": "Falcon Freelance Client",
+          "destination": "Checking",
+          "category": null,
+          "status": "received",
+          "matched_txn_id": null
+        },
+        {
+          "date": "2026-07-14",
+          "title": "Driftwood Coworking (monthly)",
+          "type": "withdrawal",
+          "amount": 320.0,
+          "currency": "BRL",
+          "source": "Rewards Card",
+          "destination": "Driftwood Coworking",
+          "category": "Utilities",
+          "status": "upcoming",
+          "matched_txn_id": null
+        },
+        {
+          "date": "2026-07-30",
+          "title": "Checking → Savings (auto-sweep)",
+          "type": "transfer",
+          "amount": 500.0,
+          "currency": "BRL",
+          "source": "Checking",
+          "destination": "Savings",
+          "category": null,
+          "status": "upcoming",
+          "matched_txn_id": null
+        }
+      ],
+      "totals": {
+        "USD": { "out": 45.0, "in": 1200.0 },
+        "BRL": { "out": 320.0, "xfer": 500.0 }
+      },
+      "status_counts": {
+        "needs_review": 1,
+        "received": 1,
+        "upcoming": 2
+      }
+    },
+    {
+      "key": "2026-08",
+      "label": "Aug 2026",
+      "items": [
+        {
+          "date": "2026-08-01",
+          "title": "Tideline Storage Units (monthly)",
+          "type": "withdrawal",
+          "amount": 68.0,
+          "currency": "USD",
+          "source": "Rewards Card",
+          "destination": "Tideline Storage Units",
+          "category": "Utilities",
+          "status": "upcoming",
+          "matched_txn_id": null
+        },
+        {
+          "date": "2026-08-16",
+          "title": "Compass Bookkeeping (monthly)",
+          "type": "withdrawal",
+          "amount": 610.0,
+          "currency": "BRL",
+          "source": "Rewards Card",
+          "destination": "Compass Bookkeeping",
+          "category": "Subscriptions",
+          "status": "upcoming",
+          "matched_txn_id": null
+        },
+        {
+          "date": "2026-08-31",
+          "title": "Northwind Consulting (invoice #1045)",
+          "type": "deposit",
+          "amount": 850.0,
+          "currency": "USD",
+          "source": "Northwind Consulting",
+          "destination": "Checking",
+          "category": null,
+          "status": "upcoming",
+          "matched_txn_id": null
+        }
+      ],
+      "totals": {
+        "USD": { "out": 68.0, "in": 850.0 },
+        "BRL": { "out": 610.0 }
+      },
+      "status_counts": {
+        "upcoming": 3
+      }
+    },
+    {
+      "key": "2026-09",
+      "label": "Sep 2026",
+      "items": [
+        {
+          "date": "2026-09-15",
+          "title": "Falcon Freelance Client (invoice #1046)",
+          "type": "deposit",
+          "amount": 1200.0,
+          "currency": "USD",
+          "source": "Falcon Freelance Client",
+          "destination": "Checking",
+          "category": null,
+          "status": "upcoming",
+          "matched_txn_id": null
+        },
+        {
+          "date": "2026-09-30",
+          "title": "Aurora Gym & Yoga (monthly)",
+          "type": "withdrawal",
+          "amount": 189.9,
+          "currency": "BRL",
+          "source": "Rewards Card",
+          "destination": "Aurora Gym & Yoga",
+          "category": "Health",
+          "status": "upcoming",
+          "matched_txn_id": null
+        }
+      ],
+      "totals": {
+        "USD": { "in": 1200.0 },
+        "BRL": { "out": 189.9 }
+      },
+      "status_counts": {
+        "upcoming": 2
+      }
+    }
+  ],
+  "meta": {
+    "recurrences_total": 14,
+    "active": 14,
+    "match_window_days": 5,
+    "item_count": 19
+  }
+}

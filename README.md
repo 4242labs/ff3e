@@ -1,5 +1,11 @@
 # FF3 Entropy
 
+![FF3 Entropy — Outstanding view showing an overdue backlog, a needs-review item, and income/expense totals](docs/forecast.png)
+
+**Live demo (100% synthetic data — no Firefly III instance behind it):**
+[4242labs.github.io/ff3-entropy](https://4242labs.github.io/ff3-entropy/) — goes live once GitHub Pages
+is enabled for this repo; until then that link 404s.
+
 **What's coming, and whether it actually happened.**
 
 Firefly III knows all your recurring transactions — rent, salary, that streaming
@@ -79,6 +85,14 @@ cd web && npm install && npm run dev
 
 Vite · React · TypeScript · Tailwind v4 · shadcn/ui · Recharts.
 Fixtures in `web/src/fixtures/` are synthetic — no real financial data.
+
+`npm run build:demo` builds a fully static bundle with no server dependency:
+`fetchForecast` short-circuits straight to the fixtures, so the demo works
+from a plain static host (this is what powers the GitHub Pages demo above).
+`web/src/fixtures/projections-demo-story.json` is the fixture behind it — a
+hand-written, entirely fictional forecast with an overdue backlog, a couple
+of needs-review items, and both income and expenses, so a first-time visitor
+sees the product's whole point without connecting anything.
 
 ## Configuration
 
