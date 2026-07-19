@@ -25,8 +25,21 @@ log = logging.getLogger("ff3e.forecast")
 FIREFLY_III_URL = os.environ.get("FIREFLY_III_URL", "").rstrip("/")
 FIREFLY_III_TOKEN = os.environ.get("FIREFLY_III_TOKEN", "")
 MATCH_DAYS = int(os.environ.get("MATCH_DAYS", "5"))  # ± window for a match
+# Optional: when Firefly III sits behind a Cloudflare Access service auth, these
+# add the service-token headers to every request. Unset → not sent (the common
+# case: a directly reachable Firefly III).
+FIREFLY_CF_ACCESS_CLIENT_ID = os.environ.get("FIREFLY_CF_ACCESS_CLIENT_ID", "")
+FIREFLY_CF_ACCESS_CLIENT_SECRET = os.environ.get("FIREFLY_CF_ACCESS_CLIENT_SECRET", "")
 _UA = "ff3e/1.0"
 _TIMEOUT = httpx.Timeout(30.0)
+
+
+def _access_headers() -> dict:
+    """Cloudflare Access service-token headers, only when both are configured."""
+    if FIREFLY_CF_ACCESS_CLIENT_ID and FIREFLY_CF_ACCESS_CLIENT_SECRET:
+        return {"CF-Access-Client-Id": FIREFLY_CF_ACCESS_CLIENT_ID,
+                "CF-Access-Client-Secret": FIREFLY_CF_ACCESS_CLIENT_SECRET}
+    return {}
 
 # direction → (status-when-matched, sign) ; sign is for out/in aggregation
 _DIR = {
@@ -52,7 +65,8 @@ def _get(path: str, params: Optional[dict] = None) -> dict:
     r = httpx.get(
         f"{FIREFLY_III_URL}{path}", params=params,
         headers={"Authorization": f"Bearer {FIREFLY_III_TOKEN}",
-                 "Accept": "application/json", "User-Agent": _UA},
+                 "Accept": "application/json", "User-Agent": _UA,
+                 **_access_headers()},
         timeout=_TIMEOUT,
     )
     r.raise_for_status()
