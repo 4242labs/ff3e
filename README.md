@@ -33,10 +33,39 @@ restate it.
 guesses. It marks an occurrence paid by the **account that paid it, not the
 amount** — so a bill whose amount drifts, or that you paid late or in the next
 month, still counts; each real payment clears the earliest still-open occurrence.
-Credit-card installments have no payment of their own — they clear when that
-month's card bill (fatura) is settled. If nothing accounts for an occurrence once
-its date has passed it says so, and if a payment can't be attributed cleanly (a
-shared or noisy account) it flags it — instead of pretending either way.
+Credit-card installments have no payment of their own — they clear when the card
+bill (fatura) they were charged to is settled. If nothing accounts for an
+occurrence once its date has passed it says so, and if a payment can't be
+attributed cleanly (a shared or noisy account) it flags it — instead of
+pretending either way.
+
+### Card billing cycles
+
+A card bill covers the *previous* cycle: charges up to a closing date, paid a
+week or so later. So the month a fatura is paid in tells you nothing about which
+charges it covered, and the closing day is the issuer's choice — one real card
+closed on the 10th one month and the 13th the next. Entropy therefore does not
+compute cycles. It reads them from the card account's **notes** in Firefly III,
+one row per fatura, exactly as the statement prints them:
+
+```
+cycle: close=2026-06-10 due=2026-06-20 total=21788.40
+cycle: close=2026-07-13 due=2026-07-20 total=26139.84
+```
+
+`total` is optional; when present, the payload reports how much of it the
+recurring charges accounted for, so an over- or under-clear is visible. Each
+fatura also prints the *next* closing date, so the table can always be kept one
+cycle ahead.
+
+A settlement (a transfer into the card described as a payment) clears the
+earliest still-unpaid cycle that had already closed when it was made and whose
+successor was not yet due. A payment late by up to a full cycle still counts; a
+minimum paid days before the full payment is absorbed rather than counted twice;
+and an on-time payment can't quietly absorb a cycle you skipped.
+
+**A card with no cycle rows clears nothing** — its occurrences stay outstanding,
+flagged `cycle_unknown`. Unknown is reported, never guessed.
 
 ## What you see
 

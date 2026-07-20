@@ -11,9 +11,12 @@ An occurrence is marked paid by ACCOUNT, never by amount:
     by the commitment's account (or a `cmt:<slug>` tag) clears the earliest still-
     open occurrence, 1:1. Amount- and date-blind, so variable amounts and late /
     cross-month payments still count. A shared identifying account → flagged.
-  • Mechanism B (credit-card installment) — fatura-driven: an occurrence is settled
-    iff its billing month has a fatura settlement (a transfer into the card account).
+  • Mechanism B (credit-card installment) — fatura-driven: an occurrence belongs to
+    the billing CYCLE it was charged in, and is settled iff that cycle was paid.
     Installments carry no per-occurrence transaction; they clear in aggregate.
+    A cycle is a (close, due) pair read from the card account's notes in Firefly III
+    — never computed, because a closing day is an issuer's choice and it moves.
+    A card with no cycle rows clears nothing and is flagged `cycle_unknown`.
 
 An occurrence still open once its date has passed is flagged for review — never
 guessed. This module is pure read: it POSTs nothing to Firefly III and marks nothing.
@@ -22,6 +25,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import datetime as dt
 from collections import defaultdict
 from typing import Optional
@@ -158,11 +162,14 @@ def _cmt_tag(tags) -> Optional[str]:
     return None
 
 
-def fetch_card_accounts() -> set:
-    """Names (lowercased) of credit-card accounts — ccAsset assets + liabilities.
+def fetch_card_accounts() -> dict:
+    """Credit-card accounts — ccAsset assets + liabilities — as
+    `{lowercased name: [Cycle, ...]}`. Membership (`name in cards`) still answers
+    "is this a card?"; the value carries its billing cycles.
+
     A recurrence whose source is a card settles via the monthly fatura (one transfer
     into the card), NOT via a per-occurrence transaction, so it needs Mechanism B."""
-    names: set = set()
+    out: dict = {}
     for atype in ("asset", "liabilities"):
         try:
             for ac in _paginate("/api/v1/accounts", {"type": atype, "limit": 100}):
@@ -171,17 +178,62 @@ def fetch_card_accounts() -> set:
                            or aa.get("account_role") == "ccAsset"
                            or aa.get("credit_card_type"))
                 if is_card and aa.get("name"):
-                    names.add(_norm(aa.get("name")))
+                    out[_norm(aa.get("name"))] = parse_cycles(aa.get("notes"))
         except Exception:
             log.warning("forecast: card-account fetch failed for type=%s", atype)
-    return names
+    return out
 
 
-def _settlement_months(txns: list[dict], cards: set) -> dict:
-    """Per card, the set of YYYY-MM in which a fatura settlement was booked — a
-    transfer INTO the card account ("Pagamento cartão CC…"). The presence of month
-    M's settlement clears one occurrence of every installment on that card in M."""
-    sm: dict = defaultdict(set)
+# ---------- billing cycles ----------
+#
+# A fatura states its own closing date, its due date and its total. Those are facts
+# printed by the issuer, not a rule to be inferred: a closing day is the issuer's
+# choice and it moves (one real card closed on the 10th one month and the 13th the
+# next). So Entropy reads them, and refuses to guess when they are absent.
+#
+# They live in the card account's `notes` in Firefly III, one row per fatura:
+#
+#     cycle: close=2026-07-13 due=2026-07-20 total=26139.84
+#
+# `total` is optional and is used only to reconcile. Rows may be in any order.
+
+_CYCLE_RE = re.compile(
+    r"close\s*=\s*(\d{4}-\d{2}-\d{2})\s+due\s*=\s*(\d{4}-\d{2}-\d{2})"
+    r"(?:\s+total\s*=\s*([0-9]+(?:\.[0-9]+)?))?",
+    re.IGNORECASE,
+)
+
+
+class Cycle:
+    """One billing cycle of one card: charges up to `close` are paid at `due`."""
+
+    __slots__ = ("close", "due", "total")
+
+    def __init__(self, close: dt.date, due: dt.date, total: Optional[float] = None):
+        self.close, self.due, self.total = close, due, total
+
+    def __repr__(self) -> str:  # pragma: no cover - debugging aid
+        return f"Cycle(close={self.close}, due={self.due}, total={self.total})"
+
+
+def parse_cycles(notes: Optional[str]) -> list:
+    """Cycle rows out of an account's notes, sorted by closing date. Malformed or
+    absent → empty list, which means "unknown" and clears nothing."""
+    out: list = []
+    for m in _CYCLE_RE.finditer(notes or ""):
+        close, due = _parse_date(m.group(1)), _parse_date(m.group(2))
+        if not close or not due or due < close:
+            continue
+        out.append(Cycle(close, due, float(m.group(3)) if m.group(3) else None))
+    out.sort(key=lambda c: c.close)
+    return out
+
+
+def _settlement_dates(txns: list[dict], cards: dict) -> dict:
+    """Per card, the fatura settlements as (date, txn_id), oldest first — transfers
+    INTO the card account describing a payment. A refund, a balance adjustment or a
+    reversal is not a settlement and clears nothing."""
+    sd: dict = defaultdict(list)
     for t in txns:
         if t.get("type") != "transfer":
             continue
@@ -190,9 +242,51 @@ def _settlement_months(txns: list[dict], cards: set) -> dict:
             continue
         desc = _norm(t.get("description"))
         if "pagamento" not in desc and "fatura" not in desc:
-            continue  # a non-payment transfer into a card (refund/balance) clears nothing
-        sm[d].add(_ym(t["date"]))
-    return sm
+            continue
+        if "estorno" in desc or "reembolso" in desc:
+            continue  # a reversal of a payment is not a payment
+        sd[d].append((t["date"], t.get("id")))
+    for k in sd:
+        sd[k].sort(key=lambda x: x[0])
+    return sd
+
+
+def _settled_cycles(cycles: list, settlements: list) -> dict:
+    """Which cycles a card's settlements paid → `{close_date: settlement_txn_id}`.
+
+    Ordered fill: each settlement, oldest first, pays the earliest still-unpaid cycle
+    it *could* have paid — one that had already closed (`close <= s`) and whose
+    successor was not yet due (`s < due(next)`). Both bounds are calendar facts, not
+    tunables: a fatura cannot be paid before it closes, and a payment made after the
+    next fatura fell due is no longer attributable to this one.
+
+    So: a payment late by anything up to a full cycle still counts; a minimum paid
+    days before the full payment is absorbed (the next cycle has not closed, so the
+    surplus settlement finds no home and is discarded); and an on-time payment cannot
+    silently clear a cycle that was skipped.
+    """
+    paid: dict = {}
+    for s_date, s_id in settlements:
+        for i, c in enumerate(cycles):
+            if c.close in paid:
+                continue
+            if c.close > s_date:
+                break  # cycles are sorted; nothing later can have closed either
+            nxt = cycles[i + 1] if i + 1 < len(cycles) else None
+            if nxt is not None and s_date >= nxt.due:
+                continue  # too late to be this cycle's payment
+            paid[c.close] = s_id
+            break
+    return paid
+
+
+def _cycle_of(d: dt.date, cycles: list):
+    """The cycle a charge dated `d` was billed in — the first that closes on or after
+    it. `None` when the table does not reach that far: unknown, never assumed."""
+    for c in cycles:
+        if c.close >= d:
+            return c
+    return None
 
 
 # ---------- occurrence extraction + matching ----------
@@ -320,7 +414,7 @@ def _matches_A(t: dict, rtype: str, key: tuple, slug: Optional[str]) -> bool:
     return _ident_key(t.get("type"), t.get("source"), t.get("destination")) == key
 
 
-def _remaining(a: dict, rtype: str, src, dst, cards: set,
+def _remaining(a: dict, rtype: str, src, dst, cards: dict,
                hist_settle: dict, hist_txns: list, slug: Optional[str]) -> Optional[int]:
     """Installments still unpaid across the WHOLE finite series (window-independent):
     total N minus occurrences already settled, counted from payment history back to
@@ -336,8 +430,15 @@ def _remaining(a: dict, rtype: str, src, dst, cards: set,
     if not full:
         return 0
     if _norm(src) in cards and rtype == "withdrawal":
-        sm = hist_settle.get(_norm(src), set())
-        paid = sum(1 for d in full if _ym(d) in sm)
+        # Same cycle logic as the payload, on the same settlement list — otherwise the
+        # installment counter grows a second opinion about what was paid.
+        cycles = cards.get(_norm(src)) or []
+        settled = _settled_cycles(cycles, hist_settle.get(_norm(src), []))
+        paid = 0
+        for d in full:
+            c = _cycle_of(d, cycles)
+            if c is not None and c.close in settled:
+                paid += 1
     else:
         key = _ident_key(rtype, src, dst)
         paid = min(sum(1 for t in hist_txns if _matches_A(t, rtype, key, slug)), len(full))
@@ -370,14 +471,16 @@ def build_projection(granularity: str = "month",
     recs = fetch_recurrences()
     txns = fetch_transactions(start, end)
     cards = fetch_card_accounts()
-    settle_months = _settlement_months(txns, cards)
 
     # Remaining-count needs payment history back to each finite series' first_date,
     # independent of the display window (which may start at `today`). Fetch that once.
     firsts = [d for d in (_parse_date(r["attributes"].get("first_date")) for r in recs) if d]
     hist_start = min(firsts + [start]) if firsts else start
     hist_txns = fetch_transactions(hist_start, end) if hist_start < start else txns
-    hist_settle = _settlement_months(hist_txns, cards)
+    # ONE settlement list, built from the widest window and shared by the payload and
+    # the remaining-count. Two lists would disagree about the oldest settlement, and
+    # so about which cycles were ever paid.
+    hist_settle = _settlement_dates(hist_txns, cards)
 
     # Index real transactions by identifying account for Mechanism A ordered-fill.
     tx_by_key: dict = defaultdict(list)
@@ -404,6 +507,10 @@ def build_projection(granularity: str = "month",
             keycount[_ident_key(rtype, tx.get("source_name"), tx.get("destination_name"))] += 1
 
     used: set = set()  # txn ids consumed by ordered-fill (one payment clears one occurrence)
+    # (card, cycle close) → amount of recurring charges this run considered settled.
+    # Confirmed occurrences are dropped from the payload, so without this an
+    # over-clear would be invisible; against the fatura total it also reconciles.
+    cleared: dict = defaultdict(float)
     n_total = len(recs)
     n_active = sum(1 for r in recs if r["attributes"].get("active"))
     items: list[dict] = []
@@ -446,13 +553,24 @@ def build_projection(granularity: str = "month",
             filled: dict = {}  # occurrence date → matched txn id (None for fatura)
 
             if is_card:
-                # Mechanism B — an occurrence is settled iff its billing month has a
-                # fatura settlement transfer into the card account.
+                # Mechanism B — an occurrence belongs to the cycle it was charged in,
+                # and is settled iff that cycle's fatura was paid.
                 mechanism = "fatura"
-                sm = settle_months.get(_norm(src), set())
-                for d in occ_sorted:
-                    if _ym(d) in sm:
-                        filled[d] = None
+                cycles = cards.get(_norm(src)) or []
+                if not cycles:
+                    # No cycle rows for this card: which fatura a charge fell into is
+                    # unknowable, so nothing is cleared and the item is surfaced.
+                    flags.append("cycle_unknown")
+                else:
+                    settled = _settled_cycles(cycles, hist_settle.get(_norm(src), []))
+                    for d in occ_sorted:
+                        c = _cycle_of(d, cycles)
+                        if c is None:
+                            if "cycle_unknown" not in flags:
+                                flags.append("cycle_unknown")
+                        elif c.close in settled:
+                            filled[d] = settled[c.close]
+                            cleared[(_norm(src), c.close)] += amt
             else:
                 # Mechanism A — ordered-fill: each identifying payment (amount- and
                 # date-blind) clears the earliest still-open occurrence, 1:1.
@@ -530,6 +648,22 @@ def build_projection(granularity: str = "month",
         cur_summary[c] = {"out": v.get("out", 0.0), "in": v.get("in", 0.0),
                           "net": v.get("in", 0.0) - v.get("out", 0.0)}
 
+    # Per-card cycle ledger: what was settled, by which payment, and how the
+    # recurring charges cleared compare with the fatura's own total.
+    card_summary = []
+    for name, cycles in sorted(cards.items()):
+        settled = _settled_cycles(cycles, hist_settle.get(name, []))
+        rows = []
+        for c in cycles:
+            row = {"close": c.close.isoformat(), "due": c.due.isoformat(),
+                   "settled_by": settled.get(c.close), "total": c.total,
+                   "recurring_cleared": round(cleared.get((name, c.close), 0.0), 2)}
+            if c.total is not None and c.close in settled:
+                row["unreconciled"] = round(c.total - row["recurring_cleared"], 2)
+            rows.append(row)
+        card_summary.append({"account": name, "cycles": rows,
+                             "cycles_known": bool(cycles)})
+
     return {
         "range": {"start": start.isoformat(), "end": end.isoformat(),
                   "granularity": gran},
@@ -538,5 +672,6 @@ def build_projection(granularity: str = "month",
         "currencies": cur_summary,
         "periods": [periods[k] for k in order],
         "meta": {"recurrences_total": n_total, "active": n_active,
-                 "match_window_days": MATCH_DAYS, "item_count": len(items)},
+                 "match_window_days": MATCH_DAYS, "item_count": len(items),
+                 "cards": card_summary},
     }
