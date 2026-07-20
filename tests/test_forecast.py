@@ -255,3 +255,34 @@ def test_non_fatura_transfer_does_not_clear(monkeypatch):
                              end=dt.date(2026, 12, 31), today=today)
     out = _outstanding(res)
     assert out["2026-06-09"]["status"] == "needs_review"   # still open
+
+
+def test_first_cycle_does_not_swallow_older_charges(monkeypatch):
+    """The earliest row opens where the spacing to the next says it does. A charge
+    from before that is not in it, and paying that fatura must not clear it."""
+    today = dt.date(2026, 7, 21)
+    recs = [_rec("Parc", "withdrawal", 9, 300, "Itaucard", "", "2026-04-09", nr=4)]
+    cycles = _cycles(("2026-06-02", "2026-06-09"), ("2026-07-02", "2026-07-09"))
+    txns = [_settlement("jun", "2026-06-09", "Itaucard")]
+    _wire(monkeypatch, recs, txns, cards={"Itaucard": cycles})
+    res = f.build_projection(granularity="month", start=dt.date(2026, 4, 1),
+                             end=dt.date(2026, 7, 31), today=today)
+    out = _outstanding(res)
+    assert out["2026-04-09"]["flags"] == ["cycle_unknown"]   # older than the table
+    assert "2026-05-09" not in out                           # opens 03/05 → June cycle
+    assert out["2026-06-09"]["status"] == "needs_review"     # July cycle, unpaid
+
+
+def test_cycle_unknown_is_per_occurrence_not_per_series(monkeypatch):
+    """A series running past the end of the table must not cast doubt on the months
+    the table does cover."""
+    today = dt.date(2026, 9, 30)
+    recs = [_rec("Parc", "withdrawal", 20, 300, "Itaucard", "", "2026-06-20", nr=4)]
+    cycles = _cycles(("2026-06-02", "2026-06-09"), ("2026-07-02", "2026-07-09"))
+    txns = []
+    _wire(monkeypatch, recs, txns, cards={"Itaucard": cycles})
+    res = f.build_projection(granularity="month", start=dt.date(2026, 6, 1),
+                             end=dt.date(2026, 9, 30), today=today)
+    out = _outstanding(res)
+    assert out["2026-06-20"].get("flags") is None            # covered by the table
+    assert out["2026-08-20"]["flags"] == ["cycle_unknown"]   # beyond it

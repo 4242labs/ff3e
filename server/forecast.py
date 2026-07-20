@@ -282,10 +282,24 @@ def _settled_cycles(cycles: list, settlements: list) -> dict:
 
 def _cycle_of(d: dt.date, cycles: list):
     """The cycle a charge dated `d` was billed in — the first that closes on or after
-    it. `None` when the table does not reach that far: unknown, never assumed."""
-    for c in cycles:
-        if c.close >= d:
-            return c
+    it, provided `d` also falls after that cycle opened. `None` when the table does
+    not reach that far: unknown, never assumed.
+
+    The earliest row has no predecessor to open it, so its opening is taken from the
+    spacing to the next row (a month, when it stands alone). Without that bound, the
+    first cycle in the table would swallow every older charge and clear them all the
+    day its fatura is paid.
+    """
+    for i, c in enumerate(cycles):
+        if c.close < d:
+            continue
+        if i:
+            opens = cycles[i - 1].close
+        elif len(cycles) > 1:
+            opens = c.close - (cycles[1].close - c.close)
+        else:
+            opens = c.close - dt.timedelta(days=31)
+        return c if d > opens else None
     return None
 
 
@@ -550,27 +564,26 @@ def build_projection(granularity: str = "month",
             flags: list = []
             if (not is_card) and keycount.get(key, 0) > 1:
                 flags.append("shared_account")   # >1 commitment on one account
-            filled: dict = {}  # occurrence date → matched txn id (None for fatura)
+            filled: dict = {}  # occurrence date → the txn that accounts for it
+            unknown_cycle: set = set()  # occurrences no cycle row covers
 
             if is_card:
                 # Mechanism B — an occurrence belongs to the cycle it was charged in,
                 # and is settled iff that cycle's fatura was paid.
                 mechanism = "fatura"
                 cycles = cards.get(_norm(src)) or []
-                if not cycles:
-                    # No cycle rows for this card: which fatura a charge fell into is
-                    # unknowable, so nothing is cleared and the item is surfaced.
-                    flags.append("cycle_unknown")
-                else:
-                    settled = _settled_cycles(cycles, hist_settle.get(_norm(src), []))
-                    for d in occ_sorted:
-                        c = _cycle_of(d, cycles)
-                        if c is None:
-                            if "cycle_unknown" not in flags:
-                                flags.append("cycle_unknown")
-                        elif c.close in settled:
-                            filled[d] = settled[c.close]
-                            cleared[(_norm(src), c.close)] += amt
+                settled = _settled_cycles(cycles, hist_settle.get(_norm(src), []))
+                for d in occ_sorted:
+                    # No cycle rows, or none covering this date: which fatura the
+                    # charge fell into is unknowable, so it is not cleared and it
+                    # says so. The flag is per occurrence — a series running past
+                    # the end of the table must not cast doubt on its own past.
+                    c = _cycle_of(d, cycles) if cycles else None
+                    if c is None:
+                        unknown_cycle.add(d)
+                    elif c.close in settled:
+                        filled[d] = settled[c.close]
+                        cleared[(_norm(src), c.close)] += amt
             else:
                 # Mechanism A — ordered-fill: each identifying payment (amount- and
                 # date-blind) clears the earliest still-open occurrence, 1:1.
@@ -614,8 +627,9 @@ def build_projection(granularity: str = "month",
                     "matched_txn_id": matched_id, "mechanism": mechanism,
                     "remaining": remaining,
                 }
-                if flags:
-                    item["flags"] = list(flags)
+                item_flags = flags + (["cycle_unknown"] if d in unknown_cycle else [])
+                if item_flags:
+                    item["flags"] = item_flags
                 items.append(item)
 
     # aggregate
