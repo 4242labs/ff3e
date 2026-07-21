@@ -30,7 +30,10 @@ function isMode(x: unknown): x is ViewMode {
 }
 
 // A stored filter set is only trusted if every facet is an array of strings;
-// anything else (shape drift, tampering) falls back to "no filters".
+// anything else (shape drift, tampering) falls back to "no filters". Individual
+// values are NOT enum-validated here — the option universe is data-dependent
+// (categories/accounts vary per fetch), so a value with no current match simply
+// filters to nothing and the user clears it, rather than being silently dropped.
 function sanitizeFilters(x: unknown): ActiveFilters {
   if (!x || typeof x !== 'object') return EMPTY_FILTERS
   const rec = x as Record<string, unknown>

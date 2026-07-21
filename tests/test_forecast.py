@@ -665,3 +665,19 @@ def test_open_ended_recurrence_has_no_installment_number(monkeypatch):
     out = _outstanding(res)
     assert out["2026-07-05"]["installment_no"] is None
     assert out["2026-07-05"]["installment_total"] is None
+
+
+def test_installment_number_survives_mid_series_settlement(monkeypatch):
+    """When early parcelas are settled and dropped from the payload, the surviving
+    rows keep their TRUE position — settlement removes rows, it never renumbers."""
+    today = dt.date(2026, 7, 12)
+    recs = [_rec("Parc 4x", "withdrawal", 9, 300, "Itaucard", "", "2026-02-09", nr=4)]
+    txns = [_settlement(f"s{m}", f"2026-{m:02d}-20", "Itaucard") for m in (2, 3)]  # 1/4,2/4 paid
+    cycles = _monthly_cycles(2026, range(1, 13), 12, 20)
+    _wire(monkeypatch, recs, txns, cards={"Itaucard": cycles})
+    res = f.build_projection(granularity="month", start=dt.date(2026, 1, 1),
+                             end=dt.date(2026, 12, 31), today=today)
+    out = _outstanding(res)
+    assert set(out) == {"2026-04-09", "2026-05-09"}          # 1/4,2/4 settled → dropped
+    assert out["2026-04-09"]["installment_no"] == 3          # NOT 1
+    assert out["2026-05-09"]["installment_no"] == 4
