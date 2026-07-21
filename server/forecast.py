@@ -46,6 +46,10 @@ log = logging.getLogger("ff3e.forecast")
 FIREFLY_III_URL = os.environ.get("FIREFLY_III_URL", "").rstrip("/")
 FIREFLY_III_TOKEN = os.environ.get("FIREFLY_III_TOKEN", "")
 MATCH_DAYS = int(os.environ.get("MATCH_DAYS", "5"))  # ± window widening on the fetch
+# A date far enough ahead to regenerate a whole finite installment series (it is
+# truncated by nr_of_repetitions, so the horizon only has to exceed the last
+# occurrence) when numbering installments 1..N regardless of the display window.
+_FAR_HORIZON = dt.date(2100, 1, 1)
 # Optional: when Firefly III sits behind a Cloudflare Access service auth, these
 # add the service-token headers to every request. Unset → not sent (the common
 # case: a directly reachable Firefly III).
@@ -577,6 +581,19 @@ def build_projection(granularity: str = "month",
         occ_dates = _occurrences(a, start, end)
         if not occ_dates:
             continue
+        # Installment position "N/T": T = the finite series length; N = this
+        # occurrence's 1-based place in the FULL series (from first_date, NOT the
+        # window). Open-ended recurrences carry neither. Regenerating the whole
+        # series (bounded by nr_of_repetitions) and indexing it keeps N aligned
+        # with the same clamp/skip rules the occurrences themselves use.
+        inst_total = a.get("nr_of_repetitions")
+        inst_total = int(inst_total) if inst_total is not None else None
+        inst_pos: dict = {}
+        if inst_total is not None:
+            first_d = _parse_date(a.get("first_date"))
+            if first_d:
+                inst_pos = {d: i + 1
+                            for i, d in enumerate(_occurrences(a, first_d, _FAR_HORIZON))}
         for tx in a.get("transactions", []):
             src = tx.get("source_name")
             dst = tx.get("destination_name")
@@ -677,6 +694,8 @@ def build_projection(granularity: str = "month",
                     "destination": dst, "category": cat, "status": status,
                     "matched_txn_id": matched_id, "mechanism": mechanism,
                     "remaining": remaining,
+                    "installment_no": inst_pos.get(d),
+                    "installment_total": inst_total,
                 }
                 if occ_flags.get(d):
                     item["flags"] = list(occ_flags[d])

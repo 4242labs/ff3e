@@ -24,13 +24,16 @@ export function colorForIndex(i: number): string {
 }
 
 /** Status colours: paid/done -> emerald, received -> blue,
- * upcoming -> fg-muted, needs_review -> amber (distinct/warning). */
+ * upcoming -> fg-muted, needs_review -> amber (distinct/warning),
+ * acknowledged_gap -> fg-muted (quiet; the badge uses a dashed border to set it
+ * apart from upcoming — a knowingly-skipped month is not alarming). */
 export const STATUS_COLOR: Record<ItemStatus, string> = {
   paid: 'var(--emerald)',
   done: 'var(--emerald)',
   received: 'var(--blue)',
   upcoming: 'var(--fg-muted)',
   needs_review: 'var(--amber)',
+  acknowledged_gap: 'var(--fg-muted)',
 }
 
 export const STATUS_LABEL: Record<ItemStatus, string> = {
@@ -39,4 +42,15 @@ export const STATUS_LABEL: Record<ItemStatus, string> = {
   received: 'Received',
   upcoming: 'Upcoming',
   needs_review: 'Needs review',
+  acknowledged_gap: 'Accepted gap',
+}
+
+/** Human labels for the per-occurrence engine flags (problems it surfaced but
+ * refused to guess through). Unknown codes fall back to the raw code. */
+export const FLAG_LABEL: Record<string, string> = {
+  missing_slug: 'No tag key',
+  non_monthly: 'Not monthly',
+  duplicate_slug: 'Duplicate key',
+  settled_conflict: 'Settlement conflict',
+  cycle_unknown: 'Cycle unknown',
 }

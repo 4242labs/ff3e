@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { AppSidebar } from '@/components/AppSidebar'
 import { PeriodNav } from '@/components/PeriodNav'
@@ -11,15 +11,23 @@ import { LoadingSkeleton } from '@/components/LoadingSkeleton'
 import { ErrorState } from '@/components/ErrorState'
 import { EmptyState } from '@/components/EmptyState'
 import { useProjections } from '@/hooks/useProjections'
-import { applyFilters, countNeedsReview, EMPTY_FILTERS, getFilterOptions, sortPeriods } from '@/lib/filters'
+import { applyFilters, countNeedsReview, getFilterOptions, sortPeriods } from '@/lib/filters'
 import { formatDate } from '@/lib/format'
 import { periodLabel, rangeForMode, shiftAnchor, singlePeriodRange, todayISO } from '@/lib/range'
+import { loadViewState, saveViewState } from '@/lib/viewstate'
 import { isCumulativeMode, type ActiveFilters, type Granularity, type ViewMode } from '@/lib/types'
 
 export default function App() {
-  const [mode, setMode] = useState<ViewMode>('month')
-  const [anchor, setAnchor] = useState<string>(() => todayISO())
-  const [filters, setFilters] = useState<ActiveFilters>(EMPTY_FILTERS)
+  // Resume the last view (mode / period / filters) rather than resetting to
+  // defaults on every load. Read once, lazily, on mount.
+  const [persisted] = useState(loadViewState)
+  const [mode, setMode] = useState<ViewMode>(persisted.mode)
+  const [anchor, setAnchor] = useState<string>(persisted.anchor)
+  const [filters, setFilters] = useState<ActiveFilters>(persisted.filters)
+  // Persist any change to the view so the next load resumes from it.
+  useEffect(() => {
+    saveViewState({ mode, anchor, filters })
+  }, [mode, anchor, filters])
   // Dashboard = the stat cards + charts. Shown by default; the choice persists
   // across reloads. The item list below is never gated by this.
   const [dashboardShown, setDashboardShown] = useState<boolean>(() => {

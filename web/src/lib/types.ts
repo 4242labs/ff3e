@@ -2,11 +2,24 @@
 
 export type ItemType = 'withdrawal' | 'deposit' | 'transfer'
 // NOTE: against a live Firefly III the engine emits only the OUTSTANDING set
-// (upcoming + needs_review) — a confirmed occurrence lives in Firefly III and is
-// dropped at the source. paid/received/done remain in the union because the
-// local dev fixture (fixtures/projections-wide.json) still exercises them.
-export type ItemStatus = 'paid' | 'received' | 'done' | 'upcoming' | 'needs_review'
+// (upcoming + needs_review + acknowledged_gap) — a confirmed occurrence lives in
+// Firefly III and is dropped at the source. paid/received/done remain in the union
+// because the local dev fixture (fixtures/projections-wide.json) still exercises
+// them. acknowledged_gap = a month knowingly accepted as unpaid (a deliberate
+// skip): kept visible so it is auditable, but distinct from needs_review.
+export type ItemStatus =
+  | 'paid'
+  | 'received'
+  | 'done'
+  | 'upcoming'
+  | 'needs_review'
+  | 'acknowledged_gap'
 export type Granularity = 'day' | 'month' | 'year'
+
+// How an occurrence is settled: `tag` = Mechanism A (explicit settles:<slug>:<M>
+// tag on the transaction); `fatura` = Mechanism B (credit-card installment cleared
+// by its billing cycle). Drives whether the installment N/T count is shown.
+export type Mechanism = 'tag' | 'fatura'
 
 export interface ProjectionItem {
   date: string
@@ -19,6 +32,19 @@ export interface ProjectionItem {
   category: string | null
   status: ItemStatus
   matched_txn_id: string | null
+  mechanism: Mechanism
+  // Installments still unpaid across the whole finite series; null for an
+  // open-ended commitment. (Engine: window-independent.)
+  remaining: number | null
+  // This occurrence's 1-based position in a finite installment series and the
+  // series total, so the row can read "N/T" (e.g. 3/10). Both null for an
+  // open-ended commitment.
+  installment_no: number | null
+  installment_total: number | null
+  // Per-occurrence problems the engine surfaced but refused to guess through
+  // (missing_slug / non_monthly / duplicate_slug / settled_conflict /
+  // cycle_unknown). Absent when the occurrence is clean.
+  flags?: string[]
 }
 
 export interface CurrencyTotals {
@@ -78,8 +104,14 @@ export type PieGroupBy = 'category' | 'account' | 'payee'
  */
 export type ViewMode = 'day' | 'month' | 'year' | 'outstanding' | 'month_end'
 
-/** Statuses that mean "hasn't happened / can't be confirmed yet". */
-export const UNCONFIRMED_STATUSES: ItemStatus[] = ['upcoming', 'needs_review']
+/** Statuses that mean "not settled" — shown on the cumulative Overdue /
+ * Due-this-month triage views. acknowledged_gap is included so a knowingly-unpaid
+ * month stays auditable there rather than vanishing from the triage surface. */
+export const UNCONFIRMED_STATUSES: ItemStatus[] = [
+  'upcoming',
+  'needs_review',
+  'acknowledged_gap',
+]
 
 export function isCumulativeMode(mode: ViewMode): boolean {
   return mode === 'outstanding' || mode === 'month_end'

@@ -635,3 +635,33 @@ def test_cycle_unknown_is_per_occurrence_not_per_series(monkeypatch):
     out = _outstanding(res)
     assert out["2026-06-20"].get("flags") is None            # covered by the table
     assert out["2026-08-20"]["flags"] == ["cycle_unknown"]   # beyond it
+
+
+def test_installment_number_is_position_in_full_series(monkeypatch):
+    """N/T: T = nr_of_repetitions; N = the occurrence's 1-based place counted from
+    first_date across the WHOLE series, independent of the display window. A 10-part
+    installment starting 2026-01-09, shown only from May, must read 5/10..8/10 — not
+    1/10 at the window's first visible row."""
+    today = dt.date(2026, 7, 12)
+    recs = [_rec("Parc 10x", "withdrawal", 9, 300, "Itaucard", "", "2026-01-09", nr=10)]
+    _wire(monkeypatch, recs, [], cards={"Itaucard": []})   # no cycles → nothing cleared
+    res = f.build_projection(granularity="month", start=dt.date(2026, 5, 1),
+                             end=dt.date(2026, 8, 31), today=today)
+    out = _outstanding(res)
+    assert out["2026-05-09"]["installment_no"] == 5
+    assert out["2026-05-09"]["installment_total"] == 10
+    assert out["2026-08-09"]["installment_no"] == 8
+    assert all(it["installment_total"] == 10
+               for per in res["periods"] for it in per["items"])
+
+
+def test_open_ended_recurrence_has_no_installment_number(monkeypatch):
+    """An open-ended commitment (no nr_of_repetitions) carries neither N nor T."""
+    today = dt.date(2026, 7, 12)
+    recs = [_rec("Rent", "withdrawal", 5, 1000, "Bank", "LL", "2026-01-05", notes="cmt:rent")]
+    _wire(monkeypatch, recs, [])
+    res = f.build_projection(granularity="month", start=dt.date(2026, 7, 1),
+                             end=dt.date(2026, 7, 31), today=today)
+    out = _outstanding(res)
+    assert out["2026-07-05"]["installment_no"] is None
+    assert out["2026-07-05"]["installment_total"] is None

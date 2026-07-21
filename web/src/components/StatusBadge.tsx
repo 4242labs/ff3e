@@ -34,6 +34,9 @@ export function StatusBadge({ status, className }: { status: ItemStatus; classNa
       style={{
         color,
         borderColor: color,
+        // A knowingly-skipped month reads as quiet-but-deliberate: same muted
+        // colour as `upcoming`, set apart by a dashed border.
+        borderStyle: status === 'acknowledged_gap' ? 'dashed' : undefined,
         // `bg-[--amber]/15` (Tailwind's opacity modifier on the CSS-var
         // arbitrary-value shorthand) silently emits no CSS in this
         // Tailwind version — verified against the built stylesheet — so
