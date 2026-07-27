@@ -7,7 +7,7 @@
  * to the shadcn<->token bridge vars at RUNTIME — which is what lets the whole
  * palette flip on `body.theme-dark` without a rebuild. The bridge var
  * definitions themselves live in bridge.css (imported before this file);
- * the raw + semantic tokens in tokens.latest.css (imported first).
+ * the raw + semantic tokens in ds-tokens.css (imported first).
  */
 
 /* The dark theme toggles `body.theme-dark`, not `.dark` — point the shadcn

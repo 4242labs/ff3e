@@ -29,7 +29,7 @@ export function ThemeSwitch() {
 
   return (
     <div
-      className="grid grid-cols-2 gap-[4px] rounded-[var(--r-2)] border border-border bg-background p-[3px] group-data-[collapsible=icon]:hidden"
+      className="grid grid-cols-2 gap-1 rounded-[var(--r-2)] border border-border bg-background p-1 group-data-[collapsible=icon]:hidden"
       role="group"
       aria-label="Theme"
     >
@@ -40,7 +40,7 @@ export function ThemeSwitch() {
           onClick={() => setTheme(t)}
           aria-pressed={theme === t}
           className={cn(
-            'cursor-pointer rounded-[var(--r-2)] border-0 px-[6px] py-[5px] font-mono text-[10px] font-medium uppercase tracking-[0.06em] transition-colors',
+            'cursor-pointer rounded-[var(--r-2)] border-0 px-1.5 py-1 font-mono text-xs font-medium uppercase tracking-wider transition-colors',
             theme === t
               ? 'bg-card text-foreground shadow-sm'
               : 'bg-transparent text-muted-foreground hover:text-foreground',

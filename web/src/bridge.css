@@ -4,9 +4,9 @@
  * alias map), not bespoke component styling. shadcn's primitives + our
  * hand-authored components consume the --background/--foreground/... vars
  * below; every value on the right is a semantic token from
- * tokens.latest.css. Do not add raw hex here or anywhere else in src/.
+ * ds-tokens.css. Do not add raw hex here or anywhere else in src/.
  *
- * The token layer itself switches palettes on `body.theme-dark` (see tokens.latest.css).
+ * The token layer itself switches palettes on `body.theme-dark` (see ds-tokens.css).
  * That does NOT make this bridge dark-mode-aware "for free", even though
  * every alias below points at a token var rather than a literal: custom
  * properties are substituted at computed-value time on the element where
@@ -69,7 +69,7 @@
    * literally `--border`. Re-declaring `--border` as
    * `var(--border)` on the same `:root` is a direct self-reference, which
    * CSS defines as invalid at computed-value time (the property would
-   * resolve to nothing, breaking every border in the app). tokens.latest.css
+   * resolve to nothing, breaking every border in the app). ds-tokens.css
    * already defines `--border` with exactly the intended value (incl. the
    * `body.theme-dark` override), so no re-declaration is needed here — the
    * alias is satisfied by omission. `--input` is a distinct name, so
@@ -100,11 +100,11 @@
 /*
  * Dark-mode re-resolution (see header comment): identical right-hand sides
  * to the :root block above, just re-declared at `body.theme-dark` scope so
- * each alias picks up the dark tokens tokens.latest.css sets there
+ * each alias picks up the dark tokens ds-tokens.css sets there
  * (--surface, --fg, --accent-*, etc.) instead of inheriting the already-
  * resolved light values from :root. `--border`/`--radius` are omitted for
  * the same reason as :root: `--border` would self-reference, and
- * tokens.latest.css already flips the underlying `--border` value under
+ * ds-tokens.css already flips the underlying `--border` value under
  * `body.theme-dark` directly, so the alias is satisfied by omission; `--radius`
  * isn't themed.
  */

@@ -73,7 +73,7 @@ export function PeriodNav(props: PeriodNavProps) {
 
   return (
     <header className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-      <div className="flex w-full max-w-[1280px] flex-wrap items-center gap-2 px-4 py-3 sm:px-6">
+      <div className="flex w-full max-w-7xl flex-wrap items-center gap-2 px-4 py-3 sm:px-6">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mx-1 hidden h-5 sm:block" />
 

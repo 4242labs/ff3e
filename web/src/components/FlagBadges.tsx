@@ -15,7 +15,7 @@ export function FlagBadges({ flags, className }: { flags?: string[]; className?:
       {flags.map((f) => (
         <span
           key={f}
-          className="inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.04em]"
+          className="inline-flex items-center rounded-md border px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wide"
           style={{
             color: 'var(--red)',
             borderColor: 'var(--red)',
