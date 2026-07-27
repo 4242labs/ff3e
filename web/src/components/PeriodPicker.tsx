@@ -13,9 +13,9 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 /** Trigger width per granularity — fixed so the field never resizes as you
  * page. Month uses the 3-letter form, so every month is the same width. */
 const TRIGGER_WIDTH: Record<Granularity, string> = {
-  day: 'w-[8.5rem]',
-  month: 'w-[6rem]',
-  year: 'w-[4.5rem]',
+  day: 'w-34',
+  month: 'w-24',
+  year: 'w-18',
 }
 
 export interface PeriodPickerProps {

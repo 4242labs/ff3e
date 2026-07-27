@@ -1,0 +1,46 @@
+name: DS compliance
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ds:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install deps (the Gate-3 primitive diff resolves through shadcn)
+        run: npm ci
+
+      - name: Fetch the design-system check (it lives in the private DS repo)
+        uses: actions/checkout@v4
+        with:
+          repository: 4242labs/design-system
+          ref: v0.6.2 # namespace-aware Gate-3 fix (MEMO-DS-BUMP-0.6.2)
+          token: ${{ secrets.DS_ACTION_TOKEN }} # org secret: a Contents:read PAT
+          path: web/.ds-action
+
+      # Run the check from `web/` (not via the composite action) so shadcn's
+      # Gate-3 resolve sees this app's components.json. The action's own step
+      # runs from the repo root, which has no components.json in a web/ monorepo.
+      - name: DS compliance — tokens, primitives, own-code drift
+        run: node .ds-action/.github/actions/ds-compliance/consumer-check.mjs
+        env:
+          DS_TOKENS_PIN: "0.6.0"
+          DS_TOKENS_FILE: "src/ds-tokens.css"
+          DS_UI_DIR: "src/components/ui"
+          DS_SCAN: "src"

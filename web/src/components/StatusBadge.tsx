@@ -37,11 +37,10 @@ export function StatusBadge({ status, className }: { status: ItemStatus; classNa
         // A knowingly-skipped month reads as quiet-but-deliberate: same muted
         // colour as `upcoming`, set apart by a dashed border.
         borderStyle: status === 'acknowledged_gap' ? 'dashed' : undefined,
-        // `bg-[--amber]/15` (Tailwind's opacity modifier on the CSS-var
-        // arbitrary-value shorthand) silently emits no CSS in this
-        // Tailwind version — verified against the built stylesheet — so
-        // the tint is done directly with color-mix() instead. Still a
-        // token reference, zero raw hex.
+        // Tailwind's opacity modifier on a CSS-var color reference silently
+        // emits no CSS in this Tailwind version — verified against the built
+        // stylesheet — so the 15% amber tint is done directly with color-mix()
+        // instead. Still a token reference (var(--amber)), zero raw hex.
         backgroundColor:
           status === 'needs_review' ? 'color-mix(in srgb, var(--amber) 15%, transparent)' : undefined,
       }}

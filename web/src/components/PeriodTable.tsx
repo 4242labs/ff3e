@@ -58,14 +58,14 @@ export function PeriodTable({ periods }: { periods: Period[] }) {
                   return (
                     <TableRow key={`${item.date}-${item.title}-${i}`}>
                       <TableCell className="whitespace-nowrap tabular-nums">{formatDate(item.date)}</TableCell>
-                      <TableCell className="max-w-[240px]">
+                      <TableCell className="max-w-60">
                         <span className="flex items-center gap-2">
                           <span className="truncate" title={item.title}>
                             {item.title}
                           </span>
                           {installment && (
                             <span
-                              className="shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] tabular-nums text-muted-foreground"
+                              className="shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono text-xs tabular-nums text-muted-foreground"
                               title={`Installment ${installment}`}
                             >
                               {installment}
@@ -77,7 +77,7 @@ export function PeriodTable({ periods }: { periods: Period[] }) {
                         {TYPE_LABEL[item.type]}
                       </TableCell>
                       <TableCell className="text-muted-foreground">{item.category ?? 'Uncategorised'}</TableCell>
-                      <TableCell className="max-w-[240px] truncate" title={accountsLabel(item)}>
+                      <TableCell className="max-w-60 truncate" title={accountsLabel(item)}>
                         {accountsLabel(item)}
                       </TableCell>
                       <TableCell className="whitespace-nowrap text-right tabular-nums">
