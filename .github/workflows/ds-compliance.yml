@@ -44,3 +44,4 @@ jobs:
           DS_TOKENS_FILE: "src/ds-tokens.css"
           DS_UI_DIR: "src/components/ui"
           DS_SCAN: "src"
+          DS_SKIP_DIFF: "1"  # CI cannot reach ds.42labs.io registry (Cloudflare 403s runner IPs); skip only the shadcn network diff — tokens + content gates still enforce (42L-1137)
