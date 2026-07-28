@@ -1,11 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 import { ChartCard } from '@/components/ChartCard'
 import { EmptyState } from '@/components/EmptyState'
-import { currencyWithLargestActivity } from '@/components/PeriodBar'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { formatMoney } from '@/lib/format'
+import { chartTitle, formatMoney } from '@/lib/format'
 import type { Period } from '@/lib/types'
 
 const COMPACT_HEIGHT = 200
@@ -68,7 +66,12 @@ function CashFlowTrendChart({
 
 export interface CashFlowTrendProps {
   periods: Period[]
-  availableCurrencies: string[]
+  /** Which currency this instance renders — the header's Currency filter
+   * decides how many instances exist (see App.tsx), not a picker in here. */
+  currency: string
+  /** Append " — {currency}" to the title; only when a sibling instance for
+   * another currency is also on screen. */
+  showCurrencyInTitle: boolean
 }
 
 /**
@@ -77,19 +80,8 @@ export interface CashFlowTrendProps {
  * real trend when more than one period is loaded (the cumulative Overdue /
  * Due-this-month views); a single-period view renders one group.
  */
-export function CashFlowTrend({ periods, availableCurrencies }: CashFlowTrendProps) {
-  const defaultCurrency = useMemo(() => currencyWithLargestActivity(periods), [periods])
-  const [currency, setCurrency] = useState<string | null>(defaultCurrency)
-
-  useEffect(() => {
-    if (!currency || !availableCurrencies.includes(currency)) {
-      setCurrency(defaultCurrency)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [defaultCurrency, availableCurrencies])
-
+export function CashFlowTrend({ periods, currency, showCurrencyInTitle }: CashFlowTrendProps) {
   const data = useMemo<Row[]>(() => {
-    if (!currency) return []
     return periods.map((p) => {
       const t = p.totals[currency] ?? {}
       const inflow = t.in ?? 0
@@ -100,25 +92,10 @@ export function CashFlowTrend({ periods, availableCurrencies }: CashFlowTrendPro
 
   const hasValues = data.some((r) => r.In !== 0 || r.Out !== 0)
 
-  const currencySelect = availableCurrencies.length > 1 && (
-    <Select value={currency ?? undefined} onValueChange={setCurrency}>
-      <SelectTrigger className="h-7 w-20 text-xs" aria-label="Cash flow trend currency">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        {availableCurrencies.map((c) => (
-          <SelectItem key={c} value={c}>
-            {c}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  )
-
   return (
-    <ChartCard title="Cash flow, per period" headerExtra={currencySelect} compactHeight={COMPACT_HEIGHT}>
+    <ChartCard title={chartTitle('Cash Flow', currency, showCurrencyInTitle)} compactHeight={COMPACT_HEIGHT}>
       {(height) =>
-        !currency || !hasValues ? (
+        !hasValues ? (
           <EmptyState message="No data in this range." />
         ) : (
           <CashFlowTrendChart data={data} currency={currency} height={height} />

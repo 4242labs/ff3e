@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 
 import { ChartCard } from '@/components/ChartCard'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { colorForIndex } from '@/lib/colors'
-import { formatMoney } from '@/lib/format'
+import { chartTitle, formatMoney } from '@/lib/format'
 import type { Period, PieGroupBy, ProjectionItem } from '@/lib/types'
 import { EmptyState } from '@/components/EmptyState'
 
@@ -21,31 +20,10 @@ function groupKey(item: ProjectionItem, groupBy: PieGroupBy): string {
   }
 }
 
-const GROUP_LABEL: Record<PieGroupBy, string> = {
-  category: 'category',
-  account: 'asset account',
-  payee: 'payee',
-}
-
-/** Currency with the largest total `out` across the given periods — the
- * default chart-currency selection. */
-export function currencyWithLargestOut(periods: Period[]): string | null {
-  const totals = new Map<string, number>()
-  for (const p of periods) {
-    for (const it of p.items) {
-      if (it.type !== 'withdrawal') continue
-      totals.set(it.currency, (totals.get(it.currency) ?? 0) + it.amount)
-    }
-  }
-  let best: string | null = null
-  let bestVal = -Infinity
-  for (const [cur, val] of totals) {
-    if (val > bestVal) {
-      best = cur
-      bestVal = val
-    }
-  }
-  return best
+const TITLE: Record<PieGroupBy, string> = {
+  category: 'Category',
+  account: 'Asset Account',
+  payee: 'Top 5 Payees',
 }
 
 /** Max pie slices shown before the tail collapses into one "Other" slice
@@ -78,8 +56,10 @@ function BreakdownPieChart({
   height: number
 }) {
   // Scales with the container: small in the compact card, large in the
-  // fullscreen overlay, capped so it never swallows the legend column.
-  const outerRadius = Math.max(40, Math.min(height / 2 - 30, 200))
+  // fullscreen overlay. Only a thin margin held back so the pie fills the
+  // card rather than floating in empty space, but never swallows the
+  // legend column.
+  const outerRadius = Math.max(45, Math.min(height / 2 - 10, 240))
 
   return (
     <ResponsiveContainer width="100%" height={height}>
@@ -149,24 +129,16 @@ export interface BreakdownPieProps {
    * in-card switcher. */
   groupBy: PieGroupBy
   periods: Period[]
-  availableCurrencies: string[]
+  /** Which currency this instance renders — the header's Currency filter
+   * decides how many instances exist (see App.tsx), not a picker in here. */
+  currency: string
+  /** Append " — {currency}" to the title; only when a sibling instance for
+   * another currency is also on screen. */
+  showCurrencyInTitle: boolean
 }
 
-export function BreakdownPie({ groupBy, periods, availableCurrencies }: BreakdownPieProps) {
-  const defaultCurrency = useMemo(() => currencyWithLargestOut(periods), [periods])
-  const [currency, setCurrency] = useState<string | null>(defaultCurrency)
-
-  // Re-pin the selected currency if it's no longer in range (filters
-  // narrowed it out) or on first data load.
-  useEffect(() => {
-    if (!currency || !availableCurrencies.includes(currency)) {
-      setCurrency(defaultCurrency)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [defaultCurrency, availableCurrencies])
-
+export function BreakdownPie({ groupBy, periods, currency, showCurrencyInTitle }: BreakdownPieProps) {
   const data = useMemo(() => {
-    if (!currency) return []
     const totals = new Map<string, number>()
     for (const p of periods) {
       for (const it of p.items) {
@@ -190,29 +162,10 @@ export function BreakdownPie({ groupBy, periods, availableCurrencies }: Breakdow
 
   const compactHeight = Math.max(MIN_CHART_HEIGHT, data.length * LEGEND_ROW + 24)
 
-  const currencySelect = availableCurrencies.length > 1 && (
-    <Select value={currency ?? undefined} onValueChange={setCurrency}>
-      <SelectTrigger className="h-7 w-20 text-xs" aria-label={`${GROUP_LABEL[groupBy]} chart currency`}>
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        {availableCurrencies.map((c) => (
-          <SelectItem key={c} value={c}>
-            {c}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  )
-
   return (
-    <ChartCard
-      title={`Out by ${GROUP_LABEL[groupBy]}`}
-      headerExtra={currencySelect}
-      compactHeight={compactHeight}
-    >
+    <ChartCard title={chartTitle(TITLE[groupBy], currency, showCurrencyInTitle)} compactHeight={compactHeight}>
       {(height) =>
-        data.length === 0 || !currency ? (
+        data.length === 0 ? (
           <EmptyState message="No expenses in this range." />
         ) : (
           <BreakdownPieChart data={data} currency={currency} height={Number(height)} />

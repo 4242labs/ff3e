@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import {
   Bar,
   BarChart,
@@ -11,36 +11,18 @@ import {
 } from 'recharts'
 
 import { ChartCard } from '@/components/ChartCard'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { EmptyState } from '@/components/EmptyState'
-import { formatMoney } from '@/lib/format'
+import { chartTitle, formatMoney } from '@/lib/format'
 import type { Period } from '@/lib/types'
 
 export interface PeriodBarProps {
   periods: Period[] // normally exactly one (day/month/year show one at a time)
-  availableCurrencies: string[]
-}
-
-/** Currency with the largest total activity (|out| + |in|) — independent of
- * the pie's expense-only default so an income-only or transfer-only period
- * still picks a sensible currency instead of falling to "No data". */
-export function currencyWithLargestActivity(periods: Period[]): string | null {
-  const totals = new Map<string, number>()
-  for (const p of periods) {
-    for (const [cur, t] of Object.entries(p.totals)) {
-      const activity = Math.abs(t.out ?? 0) + Math.abs(t.in ?? 0)
-      totals.set(cur, (totals.get(cur) ?? 0) + activity)
-    }
-  }
-  let best: string | null = null
-  let bestVal = -Infinity
-  for (const [cur, val] of totals) {
-    if (val > bestVal) {
-      best = cur
-      bestVal = val
-    }
-  }
-  return best
+  /** Which currency this instance renders — the header's Currency filter
+   * decides how many instances exist (see App.tsx), not a picker in here. */
+  currency: string
+  /** Append " — {currency}" to the title; only when a sibling instance for
+   * another currency is also on screen. */
+  showCurrencyInTitle: boolean
 }
 
 // Matches BreakdownPie's minimum card height — this and the pies sit side by
@@ -115,19 +97,8 @@ function PeriodBarChart({
  * time-series bar had nothing to trend, so this reads the three totals
  * directly instead.
  */
-export function PeriodBar({ periods, availableCurrencies }: PeriodBarProps) {
-  const defaultCurrency = useMemo(() => currencyWithLargestActivity(periods), [periods])
-  const [currency, setCurrency] = useState<string | null>(defaultCurrency)
-
-  useEffect(() => {
-    if (!currency || !availableCurrencies.includes(currency)) {
-      setCurrency(defaultCurrency)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [defaultCurrency, availableCurrencies])
-
+export function PeriodBar({ periods, currency, showCurrencyInTitle }: PeriodBarProps) {
   const data = useMemo<Row[]>(() => {
-    if (!currency) return []
     // Sum across the given periods (normally exactly one).
     let out = 0
     let inflow = 0
@@ -146,25 +117,13 @@ export function PeriodBar({ periods, availableCurrencies }: PeriodBarProps) {
 
   const hasValues = data.some((r) => r.magnitude !== 0)
 
-  const currencySelect = availableCurrencies.length > 1 && (
-    <Select value={currency ?? undefined} onValueChange={setCurrency}>
-      <SelectTrigger className="h-7 w-20 text-xs" aria-label="Bar chart currency">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        {availableCurrencies.map((c) => (
-          <SelectItem key={c} value={c}>
-            {c}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  )
-
   return (
-    <ChartCard title="In / Out / Net" headerExtra={currencySelect} compactHeight={COMPACT_HEIGHT}>
+    <ChartCard
+      title={chartTitle('In / Out / Net', currency, showCurrencyInTitle)}
+      compactHeight={COMPACT_HEIGHT}
+    >
       {(height) =>
-        !currency || !hasValues ? (
+        !hasValues ? (
           <EmptyState message="No data in this period." />
         ) : (
           <PeriodBarChart data={data} currency={currency} height={height} />

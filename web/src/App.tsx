@@ -166,32 +166,58 @@ export default function App() {
                             the Outstanding & upcoming forecast, three per
                             row, so they can be compared side by side before
                             deciding which stay. Each has its own expand
-                            button (top right) for a closer look. */}
+                            button (top right) for a closer look.
+
+                            Currency is driven entirely by the header's
+                            Currency filter (no per-chart picker): each
+                            currency-sensitive chart renders one instance per
+                            currency in `availableCurrencies`, so selecting
+                            two currencies up top shows two of each chart. */}
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                          <PeriodBar
-                            periods={sortedFilteredPeriods}
-                            availableCurrencies={availableCurrencies}
-                          />
-                          <CashFlowTrend
-                            periods={sortedFilteredPeriods}
-                            availableCurrencies={availableCurrencies}
-                          />
+                          {availableCurrencies.map((cur) => (
+                            <PeriodBar
+                              key={`iof-${cur}`}
+                              periods={sortedFilteredPeriods}
+                              currency={cur}
+                              showCurrencyInTitle={availableCurrencies.length > 1}
+                            />
+                          ))}
+                          {availableCurrencies.map((cur) => (
+                            <CashFlowTrend
+                              key={`cashflow-${cur}`}
+                              periods={sortedFilteredPeriods}
+                              currency={cur}
+                              showCurrencyInTitle={availableCurrencies.length > 1}
+                            />
+                          ))}
                           <OverdueAging periods={sortedFilteredPeriods} />
-                          <BreakdownPie
-                            groupBy="category"
-                            periods={sortedFilteredPeriods}
-                            availableCurrencies={availableCurrencies}
-                          />
-                          <BreakdownPie
-                            groupBy="account"
-                            periods={sortedFilteredPeriods}
-                            availableCurrencies={availableCurrencies}
-                          />
-                          <BreakdownPie
-                            groupBy="payee"
-                            periods={sortedFilteredPeriods}
-                            availableCurrencies={availableCurrencies}
-                          />
+                          {availableCurrencies.map((cur) => (
+                            <BreakdownPie
+                              key={`category-${cur}`}
+                              groupBy="category"
+                              periods={sortedFilteredPeriods}
+                              currency={cur}
+                              showCurrencyInTitle={availableCurrencies.length > 1}
+                            />
+                          ))}
+                          {availableCurrencies.map((cur) => (
+                            <BreakdownPie
+                              key={`account-${cur}`}
+                              groupBy="account"
+                              periods={sortedFilteredPeriods}
+                              currency={cur}
+                              showCurrencyInTitle={availableCurrencies.length > 1}
+                            />
+                          ))}
+                          {availableCurrencies.map((cur) => (
+                            <BreakdownPie
+                              key={`payee-${cur}`}
+                              groupBy="payee"
+                              periods={sortedFilteredPeriods}
+                              currency={cur}
+                              showCurrencyInTitle={availableCurrencies.length > 1}
+                            />
+                          ))}
                         </div>
                       </>
                     ) : (

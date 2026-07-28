@@ -91,7 +91,7 @@ export function OverdueAging({ periods }: OverdueAgingProps) {
   const total = data.reduce((sum, r) => sum + r.count, 0)
 
   return (
-    <ChartCard title="Needs review — days overdue" compactHeight={COMPACT_HEIGHT}>
+    <ChartCard title="Needs Review" compactHeight={COMPACT_HEIGHT}>
       {(height) =>
         total === 0 ? (
           <EmptyState message="Nothing needs review right now." />
