@@ -10,7 +10,7 @@ import {
   YAxis,
 } from 'recharts'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ChartCard } from '@/components/ChartCard'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { EmptyState } from '@/components/EmptyState'
 import { formatMoney } from '@/lib/format'
@@ -43,15 +43,69 @@ export function currencyWithLargestActivity(periods: Period[]): string | null {
   return best
 }
 
-// Matches BreakdownPie's CHART_HEIGHT — the two chart types sit side by side
-// in the same grid row and need equal card height.
-const CHART_HEIGHT = 170
+// Matches BreakdownPie's minimum card height — this and the pies sit side by
+// side in the same grid row.
+const COMPACT_HEIGHT = 170
 
 interface Row {
   name: 'In' | 'Out' | 'Net'
   value: number // signed for the diverging axis: In +, Out −, Net = In−Out
   magnitude: number // the real (labelled) amount
   fill: string
+}
+
+function PeriodBarChart({
+  data,
+  currency,
+  height,
+}: {
+  data: Row[]
+  currency: string
+  height: number | string
+}) {
+  // Symmetric domain so zero sits in the CENTRE (a proper diverging axis):
+  // income right, expense left. Without this Recharts auto-domains to
+  // [min,max] and, when there's no income, pins 0 to the right edge.
+  const maxAbs = Math.max(1, ...data.map((r) => Math.abs(r.value)))
+
+  return (
+    <ResponsiveContainer width="100%" height={height}>
+      <BarChart layout="vertical" data={data} margin={{ top: 8, right: 24, left: 8, bottom: 8 }}>
+        {/* Hide numeric ticks: on a symmetric diverging axis the abs
+            formatter prints the same value on both ends (confusing), and
+            the exact In/Out/Net figures already live in the summary
+            cards + tooltip. Keep the axis purely as the centred zero. */}
+        <XAxis type="number" domain={[-maxAbs, maxAbs]} hide />
+        <ReferenceLine x={0} stroke="var(--fg-muted)" />
+        <YAxis
+          type="category"
+          dataKey="name"
+          tick={{ fontSize: 12, fill: 'var(--fg-muted)' }}
+          axisLine={{ stroke: 'var(--border)' }}
+          tickLine={false}
+          width={44}
+        />
+        <Tooltip
+          cursor={{ fill: 'var(--muted)', opacity: 0.4 }}
+          formatter={(_value: number, _name: string, item: { payload?: Row }) =>
+            formatMoney(item?.payload?.magnitude ?? 0, currency)
+          }
+          labelFormatter={() => ''}
+          contentStyle={{
+            background: 'var(--popover)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius)',
+            color: 'var(--popover-foreground)',
+          }}
+        />
+        <Bar dataKey="value" radius={3} barSize={24} isAnimationActive={false}>
+          {data.map((row) => (
+            <Cell key={row.name} fill={row.fill} />
+          ))}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  )
 }
 
 /**
@@ -91,72 +145,31 @@ export function PeriodBar({ periods, availableCurrencies }: PeriodBarProps) {
   }, [periods, currency])
 
   const hasValues = data.some((r) => r.magnitude !== 0)
-  // Symmetric domain so zero sits in the CENTRE (a proper diverging axis):
-  // income right, expense left. Without this Recharts auto-domains to
-  // [min,max] and, when there's no income, pins 0 to the right edge.
-  const maxAbs = Math.max(1, ...data.map((r) => Math.abs(r.value)))
+
+  const currencySelect = availableCurrencies.length > 1 && (
+    <Select value={currency ?? undefined} onValueChange={setCurrency}>
+      <SelectTrigger className="h-7 w-20 text-xs" aria-label="Bar chart currency">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {availableCurrencies.map((c) => (
+          <SelectItem key={c} value={c}>
+            {c}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  )
 
   return (
-    <Card className="gap-2 py-3">
-      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
-        <CardTitle className="text-sm">In / Out / Net</CardTitle>
-        {availableCurrencies.length > 1 && (
-          <Select value={currency ?? undefined} onValueChange={setCurrency}>
-            <SelectTrigger className="h-7 w-20 text-xs" aria-label="Bar chart currency">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {availableCurrencies.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-      </CardHeader>
-      <CardContent>
-        {!currency || !hasValues ? (
+    <ChartCard title="In / Out / Net" headerExtra={currencySelect} compactHeight={COMPACT_HEIGHT}>
+      {(height) =>
+        !currency || !hasValues ? (
           <EmptyState message="No data in this period." />
         ) : (
-          <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-            <BarChart layout="vertical" data={data} margin={{ top: 8, right: 24, left: 8, bottom: 8 }}>
-              {/* Hide numeric ticks: on a symmetric diverging axis the abs
-                  formatter prints the same value on both ends (confusing), and
-                  the exact In/Out/Net figures already live in the summary
-                  cards + tooltip. Keep the axis purely as the centred zero. */}
-              <XAxis type="number" domain={[-maxAbs, maxAbs]} hide />
-              <ReferenceLine x={0} stroke="var(--fg-muted)" />
-              <YAxis
-                type="category"
-                dataKey="name"
-                tick={{ fontSize: 12, fill: 'var(--fg-muted)' }}
-                axisLine={{ stroke: 'var(--border)' }}
-                tickLine={false}
-                width={44}
-              />
-              <Tooltip
-                cursor={{ fill: 'var(--muted)', opacity: 0.4 }}
-                formatter={(_value: number, _name: string, item: { payload?: Row }) =>
-                  formatMoney(item?.payload?.magnitude ?? 0, currency)
-                }
-                labelFormatter={() => ''}
-                contentStyle={{
-                  background: 'var(--popover)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius)',
-                  color: 'var(--popover-foreground)',
-                }}
-              />
-              <Bar dataKey="value" radius={3} barSize={24} isAnimationActive={false}>
-                {data.map((row) => (
-                  <Cell key={row.name} fill={row.fill} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        )}
-      </CardContent>
-    </Card>
+          <PeriodBarChart data={data} currency={currency} height={height} />
+        )
+      }
+    </ChartCard>
   )
 }

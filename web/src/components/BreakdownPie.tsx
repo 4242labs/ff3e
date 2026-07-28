@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ChartCard } from '@/components/ChartCard'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { colorForIndex } from '@/lib/colors'
 import { formatMoney } from '@/lib/format'
@@ -51,12 +51,71 @@ export function currencyWithLargestOut(periods: Period[]): string | null {
 /** Max pie slices shown before the tail collapses into one "Other" slice
  * (also caps the legend, which mirrors the Pie's own data). */
 const MAX_SLICES = 8
-const OUTER_RADIUS = 58
 // The legend lists every slice (up to MAX_SLICES + "Other") — never clipped
 // or scrolled, so the chart's height is driven by how many rows the legend
 // actually needs, not a fixed budget. ~18px/row plus room for the pie itself.
 const LEGEND_ROW = 18
 const MIN_CHART_HEIGHT = 150
+
+interface Slice {
+  name: string
+  value: number
+}
+
+function BreakdownPieChart({
+  data,
+  currency,
+  height,
+}: {
+  data: Slice[]
+  currency: string
+  height: number
+}) {
+  // Scales with the container: small in the compact card, large in the
+  // fullscreen overlay, capped so it never swallows the legend column.
+  const outerRadius = Math.max(40, Math.min(height / 2 - 30, 200))
+
+  return (
+    <ResponsiveContainer width="100%" height={height}>
+      <PieChart>
+        {/* Legend rides on the left (own column, full height, no clipping);
+            the pie is re-centred right (cx) to leave it room instead of
+            overlapping. paddingAngle only between real slices — on a single
+            100% slice it carves a wedge-shaped notch ("pac-man"). */}
+        <Pie
+          data={data}
+          dataKey="value"
+          nameKey="name"
+          cx="66%"
+          cy="50%"
+          innerRadius={0}
+          outerRadius={outerRadius}
+          paddingAngle={data.length > 1 ? 0.5 : 0}
+          isAnimationActive={false}
+        >
+          {data.map((entry, i) => (
+            <Cell key={entry.name} fill={colorForIndex(i)} />
+          ))}
+        </Pie>
+        <Tooltip
+          formatter={(value: number) => formatMoney(value, currency)}
+          contentStyle={{
+            background: 'var(--popover)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius)',
+            color: 'var(--popover-foreground)',
+          }}
+        />
+        <Legend
+          layout="vertical"
+          verticalAlign="middle"
+          align="left"
+          wrapperStyle={{ fontSize: 11, lineHeight: '18px', maxWidth: '34%' }}
+        />
+      </PieChart>
+    </ResponsiveContainer>
+  )
+}
 
 export interface BreakdownPieProps {
   /** Which field to group withdrawals by — one fixed pie per group-by, no
@@ -101,72 +160,36 @@ export function BreakdownPie({ groupBy, periods, availableCurrencies }: Breakdow
     return [...top, { name: 'Other', value: otherValue }]
   }, [periods, groupBy, currency])
 
-  const chartHeight = Math.max(MIN_CHART_HEIGHT, data.length * LEGEND_ROW + 24)
+  const compactHeight = Math.max(MIN_CHART_HEIGHT, data.length * LEGEND_ROW + 24)
+
+  const currencySelect = availableCurrencies.length > 1 && (
+    <Select value={currency ?? undefined} onValueChange={setCurrency}>
+      <SelectTrigger className="h-7 w-20 text-xs" aria-label={`${GROUP_LABEL[groupBy]} chart currency`}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {availableCurrencies.map((c) => (
+          <SelectItem key={c} value={c}>
+            {c}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  )
 
   return (
-    <Card className="gap-2 py-3">
-      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
-        <CardTitle className="text-sm">Out by {GROUP_LABEL[groupBy]}</CardTitle>
-        {availableCurrencies.length > 1 && (
-          <Select value={currency ?? undefined} onValueChange={setCurrency}>
-            <SelectTrigger className="h-7 w-20 text-xs" aria-label={`${GROUP_LABEL[groupBy]} chart currency`}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {availableCurrencies.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-      </CardHeader>
-      <CardContent>
-        {data.length === 0 || !currency ? (
+    <ChartCard
+      title={`Out by ${GROUP_LABEL[groupBy]}`}
+      headerExtra={currencySelect}
+      compactHeight={compactHeight}
+    >
+      {(height) =>
+        data.length === 0 || !currency ? (
           <EmptyState message="No expenses in this range." />
         ) : (
-          <ResponsiveContainer width="100%" height={chartHeight}>
-            <PieChart>
-              {/* Legend rides on the left (own column, full height, no
-                  clipping); the pie is re-centred right (cx) to leave it
-                  room instead of overlapping. paddingAngle only between real
-                  slices — on a single 100% slice it carves a wedge-shaped
-                  notch ("pac-man"). */}
-              <Pie
-                data={data}
-                dataKey="value"
-                nameKey="name"
-                cx="66%"
-                cy="50%"
-                innerRadius={0}
-                outerRadius={OUTER_RADIUS}
-                paddingAngle={data.length > 1 ? 0.5 : 0}
-                isAnimationActive={false}
-              >
-                {data.map((entry, i) => (
-                  <Cell key={entry.name} fill={colorForIndex(i)} />
-                ))}
-              </Pie>
-              <Tooltip
-                formatter={(value: number) => formatMoney(value, currency)}
-                contentStyle={{
-                  background: 'var(--popover)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius)',
-                  color: 'var(--popover-foreground)',
-                }}
-              />
-              <Legend
-                layout="vertical"
-                verticalAlign="middle"
-                align="left"
-                wrapperStyle={{ fontSize: 11, lineHeight: '18px', maxWidth: '34%' }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        )}
-      </CardContent>
-    </Card>
+          <BreakdownPieChart data={data} currency={currency} height={Number(height)} />
+        )
+      }
+    </ChartCard>
   )
 }

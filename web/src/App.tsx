@@ -5,7 +5,11 @@ import { PeriodNav } from '@/components/PeriodNav'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { SummaryCards } from '@/components/SummaryCards'
 import { BreakdownPie } from '@/components/BreakdownPie'
+import { CashFlowTrend } from '@/components/CashFlowTrend'
+import { NeedsReviewTrend } from '@/components/NeedsReviewTrend'
+import { OverdueAging } from '@/components/OverdueAging'
 import { PeriodBar } from '@/components/PeriodBar'
+import { StatusBreakdown } from '@/components/StatusBreakdown'
 import { PeriodTable } from '@/components/PeriodTable'
 import { LoadingSkeleton } from '@/components/LoadingSkeleton'
 import { ErrorState } from '@/components/ErrorState'
@@ -160,14 +164,23 @@ export default function App() {
                       <>
                         <SummaryCards currencies={filtered.currencies} />
 
-                        {/* 2x2 on desktop: In/Out/Net first, then the three
-                            breakdowns — sized to fit a 14" laptop screen
-                            alongside the cards above with no scroll. */}
-                        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                        {/* Exploratory round: every chart candidate relevant
+                            to the Outstanding & upcoming forecast, three per
+                            row, so they can be compared side by side before
+                            deciding which stay. Each has its own expand
+                            button (top right) for a closer look. */}
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                           <PeriodBar
                             periods={sortedFilteredPeriods}
                             availableCurrencies={availableCurrencies}
                           />
+                          <CashFlowTrend
+                            periods={sortedFilteredPeriods}
+                            availableCurrencies={availableCurrencies}
+                          />
+                          <NeedsReviewTrend periods={sortedFilteredPeriods} />
+                          <StatusBreakdown periods={sortedFilteredPeriods} />
+                          <OverdueAging periods={sortedFilteredPeriods} />
                           <BreakdownPie
                             groupBy="category"
                             periods={sortedFilteredPeriods}
