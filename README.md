@@ -1,6 +1,6 @@
 # Entropy for Firefly III
 
-![Entropy for Firefly III — Overdue view: a needs-review backlog with per-currency totals and charts](docs/forecast.png)
+![Entropy for Firefly III — Overdue view: a needs-review backlog with in/out/net, cash-flow, and category charts](docs/forecast.png)
 
 **[Live demo →](https://ff3e.42labs.io)** — 100% synthetic data, no Firefly III instance behind it.
 
@@ -95,6 +95,11 @@ flagged `cycle_unknown`. Unknown is reported, never guessed.
 - **Due this month** — the same, plus what's still ahead this month.
 - Two displays, one or the other: **Dashboard** (per-currency totals + charts)
   or **Data** (the item table).
+- The dashboard: In/Out/Net, a cash-flow trend, a needs-review aging chart,
+  and breakdowns by category, asset account, and top payees. Any chart
+  expands to full screen; select more than one currency up top and each
+  currency-sensitive chart splits into one instance per currency, so nothing
+  gets cross-summed.
 - Filter by type, category, **asset account** or currency; totals never
   cross-sum currencies. (The account facet lists only your own asset accounts —
   the paying/receiving side — never expense or revenue counterparties.)
