@@ -42,3 +42,11 @@ export function formatDate(iso: string): string {
   if (!y || !m || !d) return iso
   return _dateFmt.format(new Date(y, m - 1, d))
 }
+
+/** Chart card title, with the currency appended only when more than one
+ * currency-specific chart of the same kind is on screen at once — driven by
+ * the header's Currency filter (one chart per selected currency), not a
+ * per-chart picker. */
+export function chartTitle(base: string, currency: string, showCurrency: boolean): string {
+  return showCurrency ? `${base} — ${currency}` : base
+}

@@ -4,7 +4,9 @@ import { AppSidebar } from '@/components/AppSidebar'
 import { PeriodNav } from '@/components/PeriodNav'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { SummaryCards } from '@/components/SummaryCards'
-import { CategoryPie } from '@/components/CategoryPie'
+import { BreakdownPie } from '@/components/BreakdownPie'
+import { CashFlowTrend } from '@/components/CashFlowTrend'
+import { OverdueAging } from '@/components/OverdueAging'
 import { PeriodBar } from '@/components/PeriodBar'
 import { PeriodTable } from '@/components/PeriodTable'
 import { LoadingSkeleton } from '@/components/LoadingSkeleton'
@@ -15,7 +17,27 @@ import { applyFilters, countNeedsReview, getFilterOptions, sortPeriods } from '@
 import { formatDate } from '@/lib/format'
 import { periodLabel, rangeForMode, shiftAnchor, singlePeriodRange, todayISO } from '@/lib/range'
 import { loadViewState, saveViewState } from '@/lib/viewstate'
-import { isCumulativeMode, type ActiveFilters, type Granularity, type ViewMode } from '@/lib/types'
+import {
+  isCumulativeMode,
+  type ActiveFilters,
+  type DashboardMode,
+  type Granularity,
+  type ViewMode,
+} from '@/lib/types'
+
+const DASHBOARD_MODE_KEY = 'entropy:dashboard'
+
+// Reads the legacy boolean ('shown' | 'hidden') alongside the current enum, so
+// an existing user's last choice carries over instead of resetting to the
+// default. 'hidden' meant "table only", which is what 'data' mode is now.
+function loadDashboardMode(): DashboardMode {
+  try {
+    const stored = localStorage.getItem(DASHBOARD_MODE_KEY)
+    return stored === 'hidden' || stored === 'data' ? 'data' : 'dashboard'
+  } catch {
+    return 'dashboard'
+  }
+}
 
 export default function App() {
   // Resume the last view (mode / period / filters) rather than resetting to
@@ -28,25 +50,18 @@ export default function App() {
   useEffect(() => {
     saveViewState({ mode, anchor, filters })
   }, [mode, anchor, filters])
-  // Dashboard = the stat cards + charts. Shown by default; the choice persists
-  // across reloads. The item list below is never gated by this.
-  const [dashboardShown, setDashboardShown] = useState<boolean>(() => {
+  // Dashboard mode (stat cards + charts) vs data mode (the item table) —
+  // mutually exclusive, never both. Defaults to dashboard; the choice persists
+  // across reloads.
+  const [dashboardMode, setDashboardMode] = useState<DashboardMode>(loadDashboardMode)
+  const changeDashboardMode = (next: DashboardMode) => {
+    setDashboardMode(next)
     try {
-      return localStorage.getItem('entropy:dashboard') !== 'hidden'
+      localStorage.setItem(DASHBOARD_MODE_KEY, next)
     } catch {
-      return true
+      /* private mode / storage disabled — session-only toggle is fine */
     }
-  })
-  const toggleDashboard = () =>
-    setDashboardShown((shown) => {
-      const next = !shown
-      try {
-        localStorage.setItem('entropy:dashboard', next ? 'shown' : 'hidden')
-      } catch {
-        /* private mode / storage disabled — session-only toggle is fine */
-      }
-      return next
-    })
+  }
 
   const cumulative = isCumulativeMode(mode)
 
@@ -119,11 +134,11 @@ export default function App() {
           filterOptions={filterOptions}
           filters={filters}
           onFiltersChange={setFilters}
-          dashboardShown={dashboardShown}
-          onToggleDashboard={toggleDashboard}
+          dashboardMode={dashboardMode}
+          onDashboardModeChange={changeDashboardMode}
         />
 
-        <main className="w-full max-w-7xl px-4 py-6 sm:px-6">
+        <main className="w-full max-w-7xl px-4 py-4 sm:px-6">
           {loading && !data && <LoadingSkeleton />}
           {error && !data && <ErrorState message={error} onRetry={refetch} />}
 
@@ -138,29 +153,76 @@ export default function App() {
                 </p>
               )}
 
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {filtered.meta.item_count === 0 ? (
                   <EmptyState message={emptyMessage} />
                 ) : (
                   <>
-                    {dashboardShown && (
+                    {dashboardMode === 'dashboard' ? (
                       <>
                         <SummaryCards currencies={filtered.currencies} />
 
-                        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                          <CategoryPie
-                            periods={sortedFilteredPeriods}
-                            availableCurrencies={availableCurrencies}
-                          />
-                          <PeriodBar
-                            periods={sortedFilteredPeriods}
-                            availableCurrencies={availableCurrencies}
-                          />
+                        {/* Exploratory round: chart candidates relevant to
+                            the Outstanding & upcoming forecast, three per
+                            row, so they can be compared side by side before
+                            deciding which stay. Each has its own expand
+                            button (top right) for a closer look.
+
+                            Currency is driven entirely by the header's
+                            Currency filter (no per-chart picker): each
+                            currency-sensitive chart renders one instance per
+                            currency in `availableCurrencies`, so selecting
+                            two currencies up top shows two of each chart. */}
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                          {availableCurrencies.map((cur) => (
+                            <PeriodBar
+                              key={`iof-${cur}`}
+                              periods={sortedFilteredPeriods}
+                              currency={cur}
+                              showCurrencyInTitle={availableCurrencies.length > 1}
+                            />
+                          ))}
+                          {availableCurrencies.map((cur) => (
+                            <CashFlowTrend
+                              key={`cashflow-${cur}`}
+                              periods={sortedFilteredPeriods}
+                              currency={cur}
+                              showCurrencyInTitle={availableCurrencies.length > 1}
+                            />
+                          ))}
+                          <OverdueAging periods={sortedFilteredPeriods} />
+                          {availableCurrencies.map((cur) => (
+                            <BreakdownPie
+                              key={`category-${cur}`}
+                              groupBy="category"
+                              periods={sortedFilteredPeriods}
+                              currency={cur}
+                              showCurrencyInTitle={availableCurrencies.length > 1}
+                            />
+                          ))}
+                          {availableCurrencies.map((cur) => (
+                            <BreakdownPie
+                              key={`account-${cur}`}
+                              groupBy="account"
+                              periods={sortedFilteredPeriods}
+                              currency={cur}
+                              showCurrencyInTitle={availableCurrencies.length > 1}
+                            />
+                          ))}
+                          {availableCurrencies.map((cur) => (
+                            <BreakdownPie
+                              key={`payee-${cur}`}
+                              groupBy="payee"
+                              periods={sortedFilteredPeriods}
+                              currency={cur}
+                              showCurrencyInTitle={availableCurrencies.length > 1}
+                            />
+                          ))}
                         </div>
                       </>
+                    ) : (
+                      <PeriodTable periods={sortedFilteredPeriods} />
                     )}
-
-                    <PeriodTable periods={sortedFilteredPeriods} />
                   </>
                 )}
               </div>

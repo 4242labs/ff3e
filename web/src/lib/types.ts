@@ -116,3 +116,7 @@ export const UNCONFIRMED_STATUSES: ItemStatus[] = [
 export function isCumulativeMode(mode: ViewMode): boolean {
   return mode === 'outstanding' || mode === 'month_end'
 }
+
+/** Two mutually-exclusive top-level displays: the stat cards + charts, or the
+ * item table. Not a filter — a whole different page body. */
+export type DashboardMode = 'dashboard' | 'data'
