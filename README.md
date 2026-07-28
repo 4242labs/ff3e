@@ -100,9 +100,14 @@ flagged `cycle_unknown`. Unknown is reported, never guessed.
   expands to full screen; select more than one currency up top and each
   currency-sensitive chart splits into one instance per currency, so nothing
   gets cross-summed.
-- Filter by type, category, **asset account** or currency; totals never
-  cross-sum currencies. (The account facet lists only your own asset accounts —
-  the paying/receiving side — never expense or revenue counterparties.)
+- Filter by type, category, **account** or currency; totals never cross-sum
+  currencies. (The account facet lists only your own asset accounts — the
+  paying/receiving side — never expense or revenue counterparties.)
+- In the Data view, **Group** collapses whichever selected account(s) you
+  pick into a per-period subtotal (by flow and currency) instead of listing
+  every item — its options are always exactly the current Account
+  selection, and you choose which of those, if any, to group. Accounts left
+  ungrouped keep their normal item rows alongside the subtotals.
 
 ## Run it
 
