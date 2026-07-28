@@ -1,4 +1,11 @@
-import { AlertTriangle, ChevronLeft, ChevronRight, LayoutDashboard, RefreshCw } from 'lucide-react'
+import {
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  LayoutDashboard,
+  RefreshCw,
+  Table2,
+} from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -9,7 +16,19 @@ import { PeriodPicker } from '@/components/PeriodPicker'
 import { STATUS_COLOR } from '@/lib/colors'
 import type { FilterOptions } from '@/lib/filters'
 import { cn } from '@/lib/utils'
-import { isCumulativeMode, type ActiveFilters, type Granularity, type ViewMode } from '@/lib/types'
+import {
+  isCumulativeMode,
+  type ActiveFilters,
+  type DashboardMode,
+  type Granularity,
+  type ViewMode,
+} from '@/lib/types'
+
+const DASHBOARD_MODE_OPTIONS: { value: DashboardMode; label: string; icon: typeof LayoutDashboard }[] =
+  [
+    { value: 'dashboard', label: 'Dashboard (cards + charts)', icon: LayoutDashboard },
+    { value: 'data', label: 'Data (table)', icon: Table2 },
+  ]
 
 const VIEW_OPTIONS: { value: ViewMode; label: string; short?: string }[] = [
   { value: 'day', label: 'Day' },
@@ -37,10 +56,9 @@ export interface PeriodNavProps {
   filterOptions: FilterOptions | null
   filters: ActiveFilters
   onFiltersChange: (f: ActiveFilters) => void
-  /** Dashboard (stat cards + charts) visibility, and its toggle. The item list
-   * is never gated by this. */
-  dashboardShown: boolean
-  onToggleDashboard: () => void
+  /** Dashboard (cards + charts) vs data (table) — mutually exclusive. */
+  dashboardMode: DashboardMode
+  onDashboardModeChange: (m: DashboardMode) => void
 }
 
 /**
@@ -65,8 +83,8 @@ export function PeriodNav(props: PeriodNavProps) {
     filterOptions,
     filters,
     onFiltersChange,
-    dashboardShown,
-    onToggleDashboard,
+    dashboardMode,
+    onDashboardModeChange,
   } = props
 
   const cumulative = isCumulativeMode(mode)
@@ -142,17 +160,30 @@ export function PeriodNav(props: PeriodNavProps) {
               {needsReviewCount}
             </span>
           )}
-          <Button
-            variant={dashboardShown ? 'secondary' : 'outline'}
-            size="icon"
-            className="h-8 w-8"
-            onClick={onToggleDashboard}
-            aria-pressed={dashboardShown}
-            aria-label={dashboardShown ? 'Hide dashboard' : 'Show dashboard'}
-            title={dashboardShown ? 'Hide dashboard' : 'Show dashboard'}
+          <div
+            className="inline-flex overflow-hidden rounded-md border border-input"
+            role="group"
+            aria-label="Display"
           >
-            <LayoutDashboard className="h-4 w-4" />
-          </Button>
+            {DASHBOARD_MODE_OPTIONS.map(({ value, label, icon: Icon }, i) => (
+              <Button
+                key={value}
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  'h-8 w-8 rounded-none',
+                  i > 0 && 'border-l border-input',
+                  dashboardMode === value && 'bg-secondary text-secondary-foreground',
+                )}
+                onClick={() => onDashboardModeChange(value)}
+                aria-pressed={dashboardMode === value}
+                aria-label={label}
+                title={label}
+              >
+                <Icon className="h-4 w-4" />
+              </Button>
+            ))}
+          </div>
           <Button
             variant="outline"
             size="icon"
