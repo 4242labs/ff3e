@@ -22,10 +22,9 @@ export interface ChartCardProps {
  * fixed rather than measured because Recharts needs a concrete number. */
 const OVERLAY_CHART_HEIGHT = 560
 
-// drift-allow: the overlay is deliberately viewport-relative (a near-fullscreen
-// chart), which has no equivalent on the DS's fixed spacing/token scale —
-// snapping to a token step would either clip on small screens or leave a
-// token-sized card floating on large ones.
+// The overlay is deliberately viewport-relative (a near-fullscreen chart) —
+// no equivalent on the DS's fixed spacing/token scale.
+// drift-allow: fullscreen dialog sizing has no token equivalent (vh/vw, not a spacing step)
 const OVERLAY_CONTENT_CLASS = 'flex h-[90vh] w-[95vw] max-w-6xl flex-col overflow-hidden'
 
 export function ChartCard({ title, headerExtra, children, compactHeight }: ChartCardProps) {
