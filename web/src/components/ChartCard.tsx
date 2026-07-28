@@ -48,6 +48,11 @@ export function ChartCard({ title, headerExtra, children, compactHeight }: Chart
       </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>
+        {/* drift-allow: the overlay is deliberately viewport-relative (a
+            near-fullscreen chart), which has no equivalent on the DS's fixed
+            spacing/token scale — snapping to a token step would either clip
+            on small screens or leave a token-sized card floating on large
+            ones. */}
         <DialogContent className="flex h-[90vh] w-[95vw] max-w-6xl flex-col overflow-hidden">
           <DialogHeader className="flex-row items-center justify-between gap-2 space-y-0">
             <DialogTitle>{title}</DialogTitle>
