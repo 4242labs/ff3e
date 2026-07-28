@@ -43,6 +43,10 @@ export function currencyWithLargestActivity(periods: Period[]): string | null {
   return best
 }
 
+// Matches BreakdownPie's CHART_HEIGHT — the two chart types sit side by side
+// in the same grid row and need equal card height.
+const CHART_HEIGHT = 170
+
 interface Row {
   name: 'In' | 'Out' | 'Net'
   value: number // signed for the diverging axis: In +, Out −, Net = In−Out
@@ -93,12 +97,12 @@ export function PeriodBar({ periods, availableCurrencies }: PeriodBarProps) {
   const maxAbs = Math.max(1, ...data.map((r) => Math.abs(r.value)))
 
   return (
-    <Card>
+    <Card className="gap-2 py-3">
       <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
-        <CardTitle className="text-base">In / Out / Net</CardTitle>
+        <CardTitle className="text-sm">In / Out / Net</CardTitle>
         {availableCurrencies.length > 1 && (
           <Select value={currency ?? undefined} onValueChange={setCurrency}>
-            <SelectTrigger className="h-8 w-24" aria-label="Bar chart currency">
+            <SelectTrigger className="h-7 w-20 text-xs" aria-label="Bar chart currency">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -115,7 +119,7 @@ export function PeriodBar({ periods, availableCurrencies }: PeriodBarProps) {
         {!currency || !hasValues ? (
           <EmptyState message="No data in this period." />
         ) : (
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
             <BarChart layout="vertical" data={data} margin={{ top: 8, right: 24, left: 8, bottom: 8 }}>
               {/* Hide numeric ticks: on a symmetric diverging axis the abs
                   formatter prints the same value on both ends (confusing), and
@@ -144,7 +148,7 @@ export function PeriodBar({ periods, availableCurrencies }: PeriodBarProps) {
                   color: 'var(--popover-foreground)',
                 }}
               />
-              <Bar dataKey="value" radius={3} barSize={34} isAnimationActive={false}>
+              <Bar dataKey="value" radius={3} barSize={24} isAnimationActive={false}>
                 {data.map((row) => (
                   <Cell key={row.name} fill={row.fill} />
                 ))}

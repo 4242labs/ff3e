@@ -3,7 +3,6 @@ import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recha
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { colorForIndex } from '@/lib/colors'
 import { formatMoney } from '@/lib/format'
 import type { Period, PieGroupBy, ProjectionItem } from '@/lib/types'
@@ -20,6 +19,12 @@ function groupKey(item: ProjectionItem, groupBy: PieGroupBy): string {
     case 'payee':
       return item.title || 'Uncategorised'
   }
+}
+
+const GROUP_LABEL: Record<PieGroupBy, string> = {
+  category: 'category',
+  account: 'asset account',
+  payee: 'payee',
 }
 
 /** Currency with the largest total `out` across the given periods — the
@@ -46,14 +51,20 @@ export function currencyWithLargestOut(periods: Period[]): string | null {
 /** Max pie slices shown before the tail collapses into one "Other" slice
  * (also caps the legend, which mirrors the Pie's own data). */
 const MAX_SLICES = 8
+// Sized so four cards (this + PeriodBar's matching height) stack 2x2 without
+// scrolling on a 14" laptop screen — see App.tsx dashboard grid.
+const CHART_HEIGHT = 170
+const OUTER_RADIUS = 60
 
-export interface CategoryPieProps {
+export interface BreakdownPieProps {
+  /** Which field to group withdrawals by — one fixed pie per group-by, no
+   * in-card switcher. */
+  groupBy: PieGroupBy
   periods: Period[]
   availableCurrencies: string[]
 }
 
-export function CategoryPie({ periods, availableCurrencies }: CategoryPieProps) {
-  const [groupBy, setGroupBy] = useState<PieGroupBy>('category')
+export function BreakdownPie({ groupBy, periods, availableCurrencies }: BreakdownPieProps) {
   const defaultCurrency = useMemo(() => currencyWithLargestOut(periods), [periods])
   const [currency, setCurrency] = useState<string | null>(defaultCurrency)
 
@@ -80,10 +91,8 @@ export function CategoryPie({ periods, availableCurrencies }: CategoryPieProps) 
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value)
     // High-cardinality group-bys (Payee in particular — real data produces
-    // ~40 unique titles) blow out the Recharts legend past the card bounds,
-    // overlapping the summary cards and eating clicks meant for the
-    // group-by tabs. Cap to the top 8 slices + a single "Other" bucket
-    // summing the tail, for every group-by mode.
+    // ~40 unique titles) blow out the Recharts legend past the card bounds.
+    // Cap to the top 8 slices + a single "Other" bucket summing the tail.
     if (sorted.length <= MAX_SLICES) return sorted
     const top = sorted.slice(0, MAX_SLICES)
     const otherValue = sorted.slice(MAX_SLICES).reduce((sum, s) => sum + s.value, 0)
@@ -91,38 +100,29 @@ export function CategoryPie({ periods, availableCurrencies }: CategoryPieProps) 
   }, [periods, groupBy, currency])
 
   return (
-    <Card>
+    <Card className="gap-2 py-3">
       <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
-        <CardTitle className="text-base">Out by {groupBy === 'payee' ? 'payee' : groupBy}</CardTitle>
-        <div className="flex items-center gap-2">
-          <Tabs value={groupBy} onValueChange={(v) => setGroupBy(v as PieGroupBy)}>
-            <TabsList>
-              <TabsTrigger value="category">Category</TabsTrigger>
-              <TabsTrigger value="account">Asset Account</TabsTrigger>
-              <TabsTrigger value="payee">Payee</TabsTrigger>
-            </TabsList>
-          </Tabs>
-          {availableCurrencies.length > 1 && (
-            <Select value={currency ?? undefined} onValueChange={setCurrency}>
-              <SelectTrigger className="h-8 w-24" aria-label="Pie chart currency">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {availableCurrencies.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        </div>
+        <CardTitle className="text-sm">Out by {GROUP_LABEL[groupBy]}</CardTitle>
+        {availableCurrencies.length > 1 && (
+          <Select value={currency ?? undefined} onValueChange={setCurrency}>
+            <SelectTrigger className="h-7 w-20 text-xs" aria-label={`${GROUP_LABEL[groupBy]} chart currency`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {availableCurrencies.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </CardHeader>
       <CardContent>
         {data.length === 0 || !currency ? (
           <EmptyState message="No expenses in this range." />
         ) : (
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
             <PieChart>
               {/* paddingAngle only between real slices — on a single 100%
                   slice it carves a wedge-shaped notch ("pac-man"). */}
@@ -131,7 +131,7 @@ export function CategoryPie({ periods, availableCurrencies }: CategoryPieProps) 
                 dataKey="value"
                 nameKey="name"
                 innerRadius={0}
-                outerRadius={100}
+                outerRadius={OUTER_RADIUS}
                 paddingAngle={data.length > 1 ? 0.5 : 0}
                 isAnimationActive={false}
               >
@@ -150,15 +150,15 @@ export function CategoryPie({ periods, availableCurrencies }: CategoryPieProps) 
               />
               <Legend
                 wrapperStyle={{
-                  fontSize: 12,
+                  fontSize: 11,
                   // Belt-and-suspenders on top of the top-8+Other cap above:
                   // even a bounded slice count can wrap to several lines
                   // with long payee names, so hard-cap the legend's own
                   // height and let it scroll rather than push past the
                   // card's edge.
-                  maxHeight: 64,
+                  maxHeight: 44,
                   overflowY: 'auto',
-                  paddingTop: 8,
+                  paddingTop: 4,
                 }}
               />
             </PieChart>

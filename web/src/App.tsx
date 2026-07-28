@@ -4,7 +4,7 @@ import { AppSidebar } from '@/components/AppSidebar'
 import { PeriodNav } from '@/components/PeriodNav'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { SummaryCards } from '@/components/SummaryCards'
-import { CategoryPie } from '@/components/CategoryPie'
+import { BreakdownPie } from '@/components/BreakdownPie'
 import { PeriodBar } from '@/components/PeriodBar'
 import { PeriodTable } from '@/components/PeriodTable'
 import { LoadingSkeleton } from '@/components/LoadingSkeleton'
@@ -136,7 +136,7 @@ export default function App() {
           onDashboardModeChange={changeDashboardMode}
         />
 
-        <main className="w-full max-w-7xl px-4 py-6 sm:px-6">
+        <main className="w-full max-w-7xl px-4 py-4 sm:px-6">
           {loading && !data && <LoadingSkeleton />}
           {error && !data && <ErrorState message={error} onRetry={refetch} />}
 
@@ -151,7 +151,7 @@ export default function App() {
                 </p>
               )}
 
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {filtered.meta.item_count === 0 ? (
                   <EmptyState message={emptyMessage} />
                 ) : (
@@ -160,12 +160,26 @@ export default function App() {
                       <>
                         <SummaryCards currencies={filtered.currencies} />
 
+                        {/* 2x2 on desktop: In/Out/Net first, then the three
+                            breakdowns — sized to fit a 14" laptop screen
+                            alongside the cards above with no scroll. */}
                         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                          <CategoryPie
+                          <PeriodBar
                             periods={sortedFilteredPeriods}
                             availableCurrencies={availableCurrencies}
                           />
-                          <PeriodBar
+                          <BreakdownPie
+                            groupBy="category"
+                            periods={sortedFilteredPeriods}
+                            availableCurrencies={availableCurrencies}
+                          />
+                          <BreakdownPie
+                            groupBy="account"
+                            periods={sortedFilteredPeriods}
+                            availableCurrencies={availableCurrencies}
+                          />
+                          <BreakdownPie
+                            groupBy="payee"
                             periods={sortedFilteredPeriods}
                             availableCurrencies={availableCurrencies}
                           />
