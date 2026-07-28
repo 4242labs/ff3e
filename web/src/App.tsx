@@ -6,10 +6,8 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { SummaryCards } from '@/components/SummaryCards'
 import { BreakdownPie } from '@/components/BreakdownPie'
 import { CashFlowTrend } from '@/components/CashFlowTrend'
-import { NeedsReviewTrend } from '@/components/NeedsReviewTrend'
 import { OverdueAging } from '@/components/OverdueAging'
 import { PeriodBar } from '@/components/PeriodBar'
-import { StatusBreakdown } from '@/components/StatusBreakdown'
 import { PeriodTable } from '@/components/PeriodTable'
 import { LoadingSkeleton } from '@/components/LoadingSkeleton'
 import { ErrorState } from '@/components/ErrorState'
@@ -164,8 +162,8 @@ export default function App() {
                       <>
                         <SummaryCards currencies={filtered.currencies} />
 
-                        {/* Exploratory round: every chart candidate relevant
-                            to the Outstanding & upcoming forecast, three per
+                        {/* Exploratory round: chart candidates relevant to
+                            the Outstanding & upcoming forecast, three per
                             row, so they can be compared side by side before
                             deciding which stay. Each has its own expand
                             button (top right) for a closer look. */}
@@ -178,8 +176,6 @@ export default function App() {
                             periods={sortedFilteredPeriods}
                             availableCurrencies={availableCurrencies}
                           />
-                          <NeedsReviewTrend periods={sortedFilteredPeriods} />
-                          <StatusBreakdown periods={sortedFilteredPeriods} />
                           <OverdueAging periods={sortedFilteredPeriods} />
                           <BreakdownPie
                             groupBy="category"
