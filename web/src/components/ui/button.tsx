@@ -38,20 +38,26 @@ const buttonVariants = cva(
   }
 )
 
-function Button({
-  className,
-  variant = "default",
-  size = "default",
-  asChild = false,
-  ...props
-}: React.ComponentProps<"button"> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean
-  }) {
+// React 18 (not 19): a plain function component can't receive `ref` — Radix
+// needs a real DOM ref on this element whenever it's used as `asChild` under
+// a Trigger/Anchor (Popover, Dialog, ...) to measure and position floating
+// content. Without forwardRef, React silently drops the ref and Radix's
+// Popper has nothing to anchor to — the trigger still fires (state updates,
+// aria-expanded flips) but the floating panel renders with no real position,
+// effectively invisible. Every FacetedFilter (header filter chips) and
+// PeriodPicker popover was broken this way.
+const Button = React.forwardRef<
+  HTMLButtonElement,
+  React.ComponentProps<"button"> &
+    VariantProps<typeof buttonVariants> & {
+      asChild?: boolean
+    }
+>(({ className, variant = "default", size = "default", asChild = false, ...props }, ref) => {
   const Comp = asChild ? Slot.Root : "button"
 
   return (
     <Comp
+      ref={ref}
       data-slot="button"
       data-variant={variant}
       data-size={size}
@@ -59,6 +65,7 @@ function Button({
       {...props}
     />
   )
-}
+})
+Button.displayName = "Button"
 
 export { Button, buttonVariants }
