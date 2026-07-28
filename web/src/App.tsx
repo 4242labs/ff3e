@@ -63,6 +63,22 @@ export default function App() {
     }
   }
 
+  // Data-table-only: which of the selected Account(s) collapse into a
+  // subtotal row per period instead of one row per item. A sub-selection of
+  // `filters.account` — never a bare on/off toggle, since the operator picks
+  // per-account whether to group it. Pruned below whenever an account drops
+  // out of the Account filter, so it can never reference a stale account.
+  const [groupAccounts, setGroupAccounts] = useState<string[]>([])
+  useEffect(() => {
+    setGroupAccounts((prev) => {
+      const pruned = prev.filter((a) => filters.account.includes(a))
+      // Same length means the filter dropped nothing (it only ever removes,
+      // never reorders) — return the identical reference so React bails out
+      // of the update instead of re-rendering on every unrelated Account edit.
+      return pruned.length === prev.length ? prev : pruned
+    })
+  }, [filters.account])
+
   const cumulative = isCumulativeMode(mode)
 
   // Calendar modes fetch exactly one day/month/year; the cumulative modes fetch
@@ -136,6 +152,8 @@ export default function App() {
           onFiltersChange={setFilters}
           dashboardMode={dashboardMode}
           onDashboardModeChange={changeDashboardMode}
+          groupAccounts={groupAccounts}
+          onGroupAccountsChange={setGroupAccounts}
         />
 
         <main className="w-full max-w-7xl px-4 py-4 sm:px-6">
@@ -221,7 +239,7 @@ export default function App() {
                         </div>
                       </>
                     ) : (
-                      <PeriodTable periods={sortedFilteredPeriods} />
+                      <PeriodTable periods={sortedFilteredPeriods} groupAccounts={groupAccounts} />
                     )}
                   </>
                 )}
