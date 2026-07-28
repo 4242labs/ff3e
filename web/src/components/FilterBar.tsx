@@ -1,9 +1,9 @@
 import { X } from 'lucide-react'
 
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { FacetedFilter } from '@/components/FacetedFilter'
-import { activeFilterCount, EMPTY_FILTERS, hasActiveFilters, type FilterOptions } from '@/lib/filters'
+import { cn } from '@/lib/utils'
+import { EMPTY_FILTERS, hasActiveFilters, type FilterOptions } from '@/lib/filters'
 import type { ActiveFilters, ItemType } from '@/lib/types'
 
 const TYPE_LABEL: Record<ItemType, string> = {
@@ -16,16 +16,44 @@ export interface FilterBarProps {
   options: FilterOptions
   filters: ActiveFilters
   onChange: (filters: ActiveFilters) => void
+  /** Data-table-only: which of the selected Account(s) to collapse into a
+   * subtotal row per period instead of one row per item. A multi-select
+   * whose OPTIONS are exactly the current Account selection — it can never
+   * offer an account that isn't also in `filters.account`. */
+  groupAccounts: string[]
+  onGroupAccountsChange: (accounts: string[]) => void
 }
 
-/** The four data facets. Lives in the header (not the page body) so it costs
- * no vertical space. */
-export function FilterBar({ options, filters, onChange }: FilterBarProps) {
+/** The four data facets (+ Group, a fifth facet scoped to whatever Account
+ * has selected). Lives in the header (not the page body) so it costs no
+ * vertical space. */
+export function FilterBar({
+  options,
+  filters,
+  onChange,
+  groupAccounts,
+  onGroupAccountsChange,
+}: FilterBarProps) {
   const set = <K extends keyof ActiveFilters>(key: K, value: ActiveFilters[K]) =>
     onChange({ ...filters, [key]: value })
+  const active = hasActiveFilters(filters)
 
   return (
     <>
+      {/* Fixed slot, always mounted — only its visibility toggles — so the
+          rest of the bar never shifts when a filter is cleared/set. */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className={cn('h-8 w-8', !active && 'invisible')}
+        onClick={() => onChange(EMPTY_FILTERS)}
+        disabled={!active}
+        aria-label="Clear filters"
+        title="Clear filters"
+      >
+        <X className="h-4 w-4" />
+      </Button>
+
       <FacetedFilter
         title="Type"
         options={options.types.map((t) => ({ value: t, label: TYPE_LABEL[t] ?? t }))}
@@ -39,10 +67,16 @@ export function FilterBar({ options, filters, onChange }: FilterBarProps) {
         onChange={(v) => set('category', v)}
       />
       <FacetedFilter
-        title="Asset Account"
+        title="Account"
         options={options.accounts.map((a) => ({ value: a, label: a }))}
         selected={filters.account}
         onChange={(v) => set('account', v)}
+      />
+      <FacetedFilter
+        title="Group"
+        options={filters.account.map((a) => ({ value: a, label: a }))}
+        selected={groupAccounts}
+        onChange={onGroupAccountsChange}
       />
       <FacetedFilter
         title="Currency"
@@ -50,21 +84,6 @@ export function FilterBar({ options, filters, onChange }: FilterBarProps) {
         selected={filters.currency}
         onChange={(v) => set('currency', v)}
       />
-
-      {hasActiveFilters(filters) && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onChange(EMPTY_FILTERS)}
-          className="h-8 px-2"
-        >
-          Reset
-          <Badge variant="secondary" className="mx-2 rounded-sm px-1 font-normal">
-            {activeFilterCount(filters)}
-          </Badge>
-          <X className="h-4 w-4" />
-        </Button>
-      )}
     </>
   )
 }

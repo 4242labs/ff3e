@@ -59,6 +59,8 @@ export interface PeriodNavProps {
   /** Dashboard (cards + charts) vs data (table) — mutually exclusive. */
   dashboardMode: DashboardMode
   onDashboardModeChange: (m: DashboardMode) => void
+  groupAccounts: string[]
+  onGroupAccountsChange: (accounts: string[]) => void
 }
 
 /**
@@ -85,6 +87,8 @@ export function PeriodNav(props: PeriodNavProps) {
     onFiltersChange,
     dashboardMode,
     onDashboardModeChange,
+    groupAccounts,
+    onGroupAccountsChange,
   } = props
 
   const cumulative = isCumulativeMode(mode)
@@ -143,7 +147,13 @@ export function PeriodNav(props: PeriodNavProps) {
             narrowing it". */}
         <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
           {filterOptions && (
-            <FilterBar options={filterOptions} filters={filters} onChange={onFiltersChange} />
+            <FilterBar
+              options={filterOptions}
+              filters={filters}
+              onChange={onFiltersChange}
+              groupAccounts={groupAccounts}
+              onGroupAccountsChange={onGroupAccountsChange}
+            />
           )}
 
           {needsReviewCount > 0 && (

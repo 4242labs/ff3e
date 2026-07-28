@@ -62,29 +62,39 @@ export function FacetedFilter({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className={cn('h-8', !single && 'border-dashed')}>
+        <Button
+          variant="outline"
+          size="sm"
+          className={cn(
+            'h-8',
+            // A fixed-width chip: an active multi-select facet is marked by
+            // a filled state alone, never by riding its picked value(s)
+            // inline — that grows the chip and reflows the whole filter row.
+            // `bg-secondary`/`text-secondary-foreground` is this app's own
+            // "on" recipe (matches the GROUP toggle and the Dashboard/Data
+            // switch) — NOT `accent`: bridge.css intentionally shadows the
+            // shadcn `accent` token with `--accent-soft`, a soft hover-fill
+            // meant as a background tint, not a text/border colour, so
+            // `text-accent`/`border-accent` render almost invisibly here.
+            !single && (selected.length > 0 ? 'bg-secondary text-secondary-foreground' : 'border-dashed'),
+          )}
+        >
           {!single && <PlusCircle className="mr-2 h-4 w-4" />}
           {title}
-          {selected.length > 0 && (
+          {single && selected.length > 0 && (
             <>
               <Separator orientation="vertical" className="mx-2 h-4" />
-              {selected.length > 2 ? (
-                <Badge variant="secondary" className="rounded-sm px-1 font-normal">
-                  {selected.length} selected
-                </Badge>
-              ) : (
-                options
-                  .filter((o) => selectedSet.has(o.value))
-                  .map((o) => (
-                    <Badge
-                      variant="secondary"
-                      key={o.value}
-                      className="mr-1 rounded-sm px-1 font-normal"
-                    >
-                      {o.short ?? o.label}
-                    </Badge>
-                  ))
-              )}
+              {options
+                .filter((o) => selectedSet.has(o.value))
+                .map((o) => (
+                  <Badge
+                    variant="secondary"
+                    key={o.value}
+                    className="mr-1 rounded-sm px-1 font-normal"
+                  >
+                    {o.short ?? o.label}
+                  </Badge>
+                ))}
             </>
           )}
         </Button>

@@ -189,6 +189,54 @@ export function applyFilters(
   }
 }
 
+export interface AccountGroupRow {
+  account: string
+  flow: 'out' | 'in'
+  currency: string
+  amount: number
+  count: number
+}
+
+/** Collapses a period's items into one subtotal row per (account, flow,
+ * currency) — only for the accounts the caller passes in (the active "Asset
+ * Account" selection), never every account an item happens to touch. A
+ * transfer between two selected accounts contributes to BOTH: an "out" row
+ * under its source and an "in" row under its destination. */
+export function groupItemsByAccount(items: ProjectionItem[], accounts: string[]): AccountGroupRow[] {
+  const accountSet = new Set(accounts)
+  const rows = new Map<string, AccountGroupRow>()
+
+  const add = (account: string, flow: 'out' | 'in', item: ProjectionItem) => {
+    if (!accountSet.has(account)) return
+    const key = `${account}|${flow}|${item.currency}`
+    const row = rows.get(key)
+    if (row) {
+      row.amount += item.amount
+      row.count += 1
+    } else {
+      rows.set(key, { account, flow, currency: item.currency, amount: item.amount, count: 1 })
+    }
+  }
+
+  for (const item of items) {
+    if (item.type === 'withdrawal') {
+      if (item.source) add(item.source, 'out', item)
+    } else if (item.type === 'deposit') {
+      if (item.destination) add(item.destination, 'in', item)
+    } else {
+      if (item.source) add(item.source, 'out', item)
+      if (item.destination) add(item.destination, 'in', item)
+    }
+  }
+
+  return [...rows.values()].sort(
+    (a, b) =>
+      a.account.localeCompare(b.account) ||
+      a.flow.localeCompare(b.flow) ||
+      a.currency.localeCompare(b.currency),
+  )
+}
+
 /** Sum of status_counts.needs_review across the UNFILTERED dataset
  * — the header warning chip always reflects the full range, regardless of
  * active filters. */
