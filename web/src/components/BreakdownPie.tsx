@@ -51,10 +51,12 @@ export function currencyWithLargestOut(periods: Period[]): string | null {
 /** Max pie slices shown before the tail collapses into one "Other" slice
  * (also caps the legend, which mirrors the Pie's own data). */
 const MAX_SLICES = 8
-// Sized so four cards (this + PeriodBar's matching height) stack 2x2 without
-// scrolling on a 14" laptop screen — see App.tsx dashboard grid.
-const CHART_HEIGHT = 170
-const OUTER_RADIUS = 60
+const OUTER_RADIUS = 58
+// The legend lists every slice (up to MAX_SLICES + "Other") — never clipped
+// or scrolled, so the chart's height is driven by how many rows the legend
+// actually needs, not a fixed budget. ~18px/row plus room for the pie itself.
+const LEGEND_ROW = 18
+const MIN_CHART_HEIGHT = 150
 
 export interface BreakdownPieProps {
   /** Which field to group withdrawals by — one fixed pie per group-by, no
@@ -99,6 +101,8 @@ export function BreakdownPie({ groupBy, periods, availableCurrencies }: Breakdow
     return [...top, { name: 'Other', value: otherValue }]
   }, [periods, groupBy, currency])
 
+  const chartHeight = Math.max(MIN_CHART_HEIGHT, data.length * LEGEND_ROW + 24)
+
   return (
     <Card className="gap-2 py-3">
       <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
@@ -122,14 +126,19 @@ export function BreakdownPie({ groupBy, periods, availableCurrencies }: Breakdow
         {data.length === 0 || !currency ? (
           <EmptyState message="No expenses in this range." />
         ) : (
-          <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+          <ResponsiveContainer width="100%" height={chartHeight}>
             <PieChart>
-              {/* paddingAngle only between real slices — on a single 100%
-                  slice it carves a wedge-shaped notch ("pac-man"). */}
+              {/* Legend rides on the left (own column, full height, no
+                  clipping); the pie is re-centred right (cx) to leave it
+                  room instead of overlapping. paddingAngle only between real
+                  slices — on a single 100% slice it carves a wedge-shaped
+                  notch ("pac-man"). */}
               <Pie
                 data={data}
                 dataKey="value"
                 nameKey="name"
+                cx="66%"
+                cy="50%"
                 innerRadius={0}
                 outerRadius={OUTER_RADIUS}
                 paddingAngle={data.length > 1 ? 0.5 : 0}
@@ -149,17 +158,10 @@ export function BreakdownPie({ groupBy, periods, availableCurrencies }: Breakdow
                 }}
               />
               <Legend
-                wrapperStyle={{
-                  fontSize: 11,
-                  // Belt-and-suspenders on top of the top-8+Other cap above:
-                  // even a bounded slice count can wrap to several lines
-                  // with long payee names, so hard-cap the legend's own
-                  // height and let it scroll rather than push past the
-                  // card's edge.
-                  maxHeight: 44,
-                  overflowY: 'auto',
-                  paddingTop: 4,
-                }}
+                layout="vertical"
+                verticalAlign="middle"
+                align="left"
+                wrapperStyle={{ fontSize: 11, lineHeight: '18px', maxWidth: '34%' }}
               />
             </PieChart>
           </ResponsiveContainer>
