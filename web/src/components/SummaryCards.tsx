@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { formatMoney } from '@/lib/format'
 import type { ProjectionsResponse } from '@/lib/types'
 
@@ -42,16 +42,14 @@ function SummaryCard({
   color: string
 }) {
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+    <Card className="py-4">
+      <CardContent className="flex items-baseline justify-between gap-3">
+        <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
           {label}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-2xl font-semibold tabular-nums" style={{ color }}>
+        </span>
+        <span className="text-lg font-semibold tabular-nums" style={{ color }}>
           {formatMoney(value, currency)}
-        </p>
+        </span>
       </CardContent>
     </Card>
   )
