@@ -49,8 +49,14 @@ export function currencyWithLargestOut(periods: Period[]): string | null {
 }
 
 /** Max pie slices shown before the tail collapses into one "Other" slice
- * (also caps the legend, which mirrors the Pie's own data). */
-const MAX_SLICES = 8
+ * (also caps the legend, which mirrors the Pie's own data). Payee is far
+ * higher cardinality than category/account (real data: ~40 unique titles),
+ * so it gets a tighter top-5 cap rather than sharing the other two's top-8. */
+const MAX_SLICES: Record<PieGroupBy, number> = {
+  category: 8,
+  account: 8,
+  payee: 5,
+}
 // The legend lists every slice (up to MAX_SLICES + "Other") — never clipped
 // or scrolled, so the chart's height is driven by how many rows the legend
 // actually needs, not a fixed budget. ~18px/row plus room for the pie itself.
@@ -110,7 +116,28 @@ function BreakdownPieChart({
           layout="vertical"
           verticalAlign="middle"
           align="left"
-          wrapperStyle={{ fontSize: 11, lineHeight: '18px', maxWidth: '34%' }}
+          wrapperStyle={{ fontSize: 11, lineHeight: '18px', maxWidth: '34%', whiteSpace: 'nowrap' }}
+          // One line per entry, always — a long payee name gets an ellipsis
+          // (full name in the title tooltip) instead of wrapping to a second
+          // line and throwing off the row-count height math above. The
+          // wrapper's `whiteSpace: nowrap` (above) stops the icon and label
+          // from breaking onto separate lines; the span's own max-width
+          // (icon + its margin subtracted) is what actually clips the text.
+          formatter={(value: string) => (
+            <span
+              title={value}
+              style={{
+                display: 'inline-block',
+                maxWidth: 'calc(100% - 20px)',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                verticalAlign: 'middle',
+              }}
+            >
+              {value}
+            </span>
+          )}
         />
       </PieChart>
     </ResponsiveContainer>
@@ -151,12 +178,13 @@ export function BreakdownPie({ groupBy, periods, availableCurrencies }: Breakdow
     const sorted = [...totals.entries()]
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value)
-    // High-cardinality group-bys (Payee in particular — real data produces
-    // ~40 unique titles) blow out the Recharts legend past the card bounds.
-    // Cap to the top 8 slices + a single "Other" bucket summing the tail.
-    if (sorted.length <= MAX_SLICES) return sorted
-    const top = sorted.slice(0, MAX_SLICES)
-    const otherValue = sorted.slice(MAX_SLICES).reduce((sum, s) => sum + s.value, 0)
+    // High-cardinality group-bys blow out the Recharts legend past the card
+    // bounds. Cap to the top N slices + a single "Other" bucket summing the
+    // tail.
+    const max = MAX_SLICES[groupBy]
+    if (sorted.length <= max) return sorted
+    const top = sorted.slice(0, max)
+    const otherValue = sorted.slice(max).reduce((sum, s) => sum + s.value, 0)
     return [...top, { name: 'Other', value: otherValue }]
   }, [periods, groupBy, currency])
 
