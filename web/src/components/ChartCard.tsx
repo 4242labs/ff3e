@@ -22,6 +22,12 @@ export interface ChartCardProps {
  * fixed rather than measured because Recharts needs a concrete number. */
 const OVERLAY_CHART_HEIGHT = 560
 
+// drift-allow: the overlay is deliberately viewport-relative (a near-fullscreen
+// chart), which has no equivalent on the DS's fixed spacing/token scale —
+// snapping to a token step would either clip on small screens or leave a
+// token-sized card floating on large ones.
+const OVERLAY_CONTENT_CLASS = 'flex h-[90vh] w-[95vw] max-w-6xl flex-col overflow-hidden'
+
 export function ChartCard({ title, headerExtra, children, compactHeight }: ChartCardProps) {
   const [open, setOpen] = useState(false)
 
@@ -48,12 +54,7 @@ export function ChartCard({ title, headerExtra, children, compactHeight }: Chart
       </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        {/* drift-allow: the overlay is deliberately viewport-relative (a
-            near-fullscreen chart), which has no equivalent on the DS's fixed
-            spacing/token scale — snapping to a token step would either clip
-            on small screens or leave a token-sized card floating on large
-            ones. */}
-        <DialogContent className="flex h-[90vh] w-[95vw] max-w-6xl flex-col overflow-hidden">
+        <DialogContent className={OVERLAY_CONTENT_CLASS}>
           <DialogHeader className="flex-row items-center justify-between gap-2 space-y-0">
             <DialogTitle>{title}</DialogTitle>
             {headerExtra && <div className="flex items-center gap-2 pr-6">{headerExtra}</div>}
