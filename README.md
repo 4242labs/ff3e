@@ -31,8 +31,9 @@ restate it.
 
 "Needs review" is the point of the whole thing. Entropy for Firefly III never
 guesses. It marks an occurrence paid by the **account that paid it, not the
-amount** — so a bill whose amount drifts, or that you paid late or in the next
-month, still counts; each real payment clears the earliest still-open occurrence.
+amount** — so a recurring transaction whose amount drifts, or that you paid
+late or in the next month, still counts; each real payment clears the earliest
+still-open occurrence.
 If nothing accounts for an occurrence once its date has passed it says so, and if
 a payment can't be attributed cleanly (a shared or noisy account) it flags it —
 instead of pretending either way.
@@ -61,7 +62,7 @@ they *are* recurrences, and they still clear against the paid billing cycle belo
 
 ### Card billing cycles
 
-A card bill covers the *previous* cycle: charges up to a closing date, paid a
+A card statement covers the *previous* cycle: charges up to a closing date, paid a
 week or so later. So the month a fatura is paid in tells you nothing about which
 charges it covered, and the closing day is the issuer's choice — one real card
 closed on the 10th one month and the 13th the next. Entropy therefore does not
