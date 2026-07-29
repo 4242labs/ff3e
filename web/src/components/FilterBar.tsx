@@ -16,17 +16,17 @@ export interface FilterBarProps {
   options: FilterOptions
   filters: ActiveFilters
   onChange: (filters: ActiveFilters) => void
-  /** Data-table-only: which of the selected Account(s) to collapse into a
-   * subtotal row per period instead of one row per item. A multi-select
-   * whose OPTIONS are exactly the current Account selection — it can never
-   * offer an account that isn't also in `filters.account`. */
+  /** Data-table-only: which asset account(s) to collapse into a subtotal row
+   * per period instead of one row per item. A multi-select whose OPTIONS are
+   * every asset account in the dataset (same universe as Account) —
+   * independent of what's currently selected in Account. */
   groupAccounts: string[]
   onGroupAccountsChange: (accounts: string[]) => void
 }
 
-/** The four data facets (+ Group, a fifth facet scoped to whatever Account
- * has selected). Lives in the header (not the page body) so it costs no
- * vertical space. */
+/** The four data facets (+ Group, a fifth facet over the same account
+ * universe as Account, independently selected). Lives in the header (not the
+ * page body) so it costs no vertical space. */
 export function FilterBar({
   options,
   filters,
@@ -74,7 +74,7 @@ export function FilterBar({
       />
       <FacetedFilter
         title="Group"
-        options={filters.account.map((a) => ({ value: a, label: a }))}
+        options={options.accounts.map((a) => ({ value: a, label: a }))}
         selected={groupAccounts}
         onChange={onGroupAccountsChange}
       />

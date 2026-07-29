@@ -42,10 +42,10 @@ function isFullyGrouped(item: ProjectionItem, groupAccounts: string[]): boolean 
 
 export interface PeriodTableProps {
   periods: Period[]
-  /** Which of the selected Account(s) to collapse into a subtotal row per
-   * period instead of one row per item. A sub-selection of the Account
-   * filter — items touching an account outside this list keep their normal
-   * item row alongside any subtotal rows. */
+  /** Which asset account(s) to collapse into a subtotal row per period
+   * instead of one row per item — independent of the Account filter. Items
+   * touching an account outside this list keep their normal item row
+   * alongside any subtotal rows. */
   groupAccounts?: string[]
 }
 
