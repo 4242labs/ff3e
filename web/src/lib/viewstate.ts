@@ -7,11 +7,14 @@
 // falls back to session-only defaults — never throws into render.
 
 import { EMPTY_FILTERS } from './filters'
-import { todayISO } from './range'
-import type { ActiveFilters, ViewMode } from './types'
+import { shiftAnchor, todayISO } from './range'
+import type { ActiveFilters, ReportPeriodMode, ReportView, ViewMode } from './types'
 
 const KEY = 'entropy:viewstate'
+const REPORTS_KEY = 'entropy:reports'
 const MODES: ViewMode[] = ['day', 'month', 'year', 'outstanding', 'month_end']
+const REPORT_PERIOD_MODES: ReportPeriodMode[] = ['day', 'month', 'year', 'custom']
+const REPORT_VIEWS: ReportView[] = ['transactions', 'categories']
 const ANCHOR_RE = /^\d{4}-\d{2}-\d{2}$/
 const FACETS = ['type', 'category', 'account', 'currency'] as const
 
@@ -71,6 +74,79 @@ export function loadViewState(): ViewState {
 export function saveViewState(state: ViewState): void {
   try {
     localStorage.setItem(KEY, JSON.stringify(state))
+  } catch {
+    /* private mode / storage disabled — session-only is fine */
+  }
+}
+
+// --- Reports -----------------------------------------------------------------
+// Kept under its own key rather than folded into ViewState: the two pages have
+// independent periods on purpose (reading last quarter's report should not move
+// the forecast off this month), and a shared blob would couple them.
+
+export interface ReportsState {
+  periodMode: ReportPeriodMode
+  anchor: string
+  custom: { start: string; end: string }
+  view: ReportView
+  /** One card per calendar month instead of one per currency for the window. */
+  groupByMonth: boolean
+  filters: ActiveFilters
+}
+
+export function defaultReportsState(): ReportsState {
+  const today = todayISO()
+  return {
+    periodMode: 'month',
+    anchor: today,
+    // A custom window nobody has touched yet opens on the last three months —
+    // a defensible default for a report, and never an empty range.
+    custom: { start: shiftAnchor('month', today, -2), end: today },
+    view: 'transactions',
+    groupByMonth: false,
+    filters: EMPTY_FILTERS,
+  }
+}
+
+function isReportPeriodMode(x: unknown): x is ReportPeriodMode {
+  return typeof x === 'string' && (REPORT_PERIOD_MODES as string[]).includes(x)
+}
+
+function isReportView(x: unknown): x is ReportView {
+  return typeof x === 'string' && (REPORT_VIEWS as string[]).includes(x)
+}
+
+function sanitizeCustom(x: unknown): { start: string; end: string } {
+  const fallback = defaultReportsState().custom
+  if (!x || typeof x !== 'object') return fallback
+  const rec = x as Record<string, unknown>
+  const start = typeof rec.start === 'string' && ANCHOR_RE.test(rec.start) ? rec.start : null
+  const end = typeof rec.end === 'string' && ANCHOR_RE.test(rec.end) ? rec.end : null
+  return start && end ? { start, end } : fallback
+}
+
+export function loadReportsState(): ReportsState {
+  try {
+    const raw = localStorage.getItem(REPORTS_KEY)
+    if (!raw) return defaultReportsState()
+    const p = JSON.parse(raw) as Record<string, unknown>
+    const d = defaultReportsState()
+    return {
+      periodMode: isReportPeriodMode(p.periodMode) ? p.periodMode : d.periodMode,
+      anchor: sanitizeAnchor(p.anchor),
+      custom: sanitizeCustom(p.custom),
+      view: isReportView(p.view) ? p.view : d.view,
+      groupByMonth: typeof p.groupByMonth === 'boolean' ? p.groupByMonth : d.groupByMonth,
+      filters: sanitizeFilters(p.filters),
+    }
+  } catch {
+    return defaultReportsState()
+  }
+}
+
+export function saveReportsState(state: ReportsState): void {
+  try {
+    localStorage.setItem(REPORTS_KEY, JSON.stringify(state))
   } catch {
     /* private mode / storage disabled — session-only is fine */
   }

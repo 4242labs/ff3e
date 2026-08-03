@@ -74,6 +74,31 @@ def api_forecast(granularity: str = "month",
         raise HTTPException(status_code=502, detail=f"Firefly III request failed: {e}")
 
 
+@app.get("/api/transactions")
+def api_transactions(start: str, end: str):
+    """Every booked transaction in [start, end] — what the Reports view ranks.
+
+    This is the ledger, not the forecast: no matching, no settlement, no
+    projection. `start` and `end` are required ISO dates, because a report over
+    an unstated window is meaningless.
+
+    Filtering and grouping are the browser's, same as the forecast route: one
+    unfiltered fetch per window, then every facet applied client-side.
+    """
+    s, e = _parse_date(start), _parse_date(end)
+    if s is None or e is None:
+        raise HTTPException(status_code=400, detail="start and end are required ISO dates")
+    if e < s:
+        s, e = e, s
+    try:
+        return forecast.build_transactions(start=s, end=e)
+    except RuntimeError as exc:  # missing config
+        raise HTTPException(status_code=503, detail=str(exc))
+    except Exception as exc:
+        log.exception("transactions failed")
+        raise HTTPException(status_code=502, detail=f"Firefly III request failed: {exc}")
+
+
 # The SPA, if it has been built. `html=True` serves index.html at the mount
 # root — that is all the "SPA fallback" this single-view app needs.
 _DIST = Path(os.environ.get("WEB_DIST", Path(__file__).resolve().parent.parent / "web" / "dist"))

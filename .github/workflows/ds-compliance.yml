@@ -40,7 +40,7 @@ jobs:
       - name: DS compliance — tokens, primitives, own-code drift
         run: node .ds-action/.github/actions/ds-compliance/consumer-check.mjs
         env:
-          DS_TOKENS_PIN: "0.6.0"
+          DS_TOKENS_PIN: "0.7.0"
           DS_TOKENS_FILE: "src/ds-tokens.css"
           DS_UI_DIR: "src/components/ui"
           DS_SCAN: "src"

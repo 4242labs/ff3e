@@ -965,3 +965,62 @@ def build_projection(granularity: str = "month",
                  "match_window_days": MATCH_DAYS, "item_count": len(items),
                  "cards": card_summary},
     }
+
+
+# ---------- booked transactions (the Reports view) ----------
+#
+# The forecast is about what is COMING. A report is about what HAPPENED, so it
+# reads the ledger directly rather than the recurrence projection: every booked
+# transaction in the window, as Firefly III recorded it. Nothing is matched,
+# nothing is inferred, nothing is settled — this is the ledger, restated in the
+# shape the browser ranks.
+#
+# Aggregation stays in the browser, exactly as it does for the forecast: one
+# unfiltered fetch per window, then every facet applied client-side so changing a
+# filter costs no round-trip.
+
+def build_transactions(start: dt.date, end: dt.date) -> dict:
+    """Every booked transaction in [start, end], flat, plus per-currency totals.
+
+    `fetch_transactions` deliberately widens its fetch by MATCH_DAYS so the
+    forecast can see settlements just outside the window. A report must not: a
+    July report showing a 3rd-of-August charge would be wrong. So the rows are
+    re-clipped to the exact window here."""
+    rows = [t for t in fetch_transactions(start, end) if start <= t["date"] <= end]
+
+    currencies: dict = defaultdict(lambda: defaultdict(float))
+    out: list[dict] = []
+    for t in rows:
+        flow = _DIR.get(t.get("type") or "", ("", None))[1]
+        if flow is None:
+            continue                    # a type this engine has no direction for
+        cur = t.get("currency")
+        if flow in ("out", "in"):
+            currencies[cur][flow] += t["amount"]
+        out.append({
+            "id": t.get("id"),
+            "date": t["date"].isoformat(),
+            "description": t.get("description") or "(untitled)",
+            "type": t.get("type"),
+            "amount": t["amount"],
+            "currency": cur,
+            "source": t.get("source"),
+            "destination": t.get("destination"),
+            # Firefly leaves this null on an uncategorised transaction; the
+            # browser buckets those rather than dropping them.
+            "category": t.get("category"),
+        })
+    out.sort(key=lambda r: (r["date"], r["description"]))
+
+    cur_summary = {}
+    for c, v in currencies.items():
+        cur_summary[c] = {"out": round(v.get("out", 0.0), 2),
+                          "in": round(v.get("in", 0.0), 2),
+                          "net": round(v.get("in", 0.0) - v.get("out", 0.0), 2)}
+
+    return {
+        "range": {"start": start.isoformat(), "end": end.isoformat()},
+        "currencies": cur_summary,
+        "transactions": out,
+        "meta": {"count": len(out)},
+    }

@@ -883,3 +883,76 @@ def test_open_ended_recurrence_has_no_installment_number(monkeypatch):
     out = _outstanding(res)
     assert out["2026-07-05"]["installment_no"] is None
     assert out["2026-07-05"]["installment_total"] is None
+
+
+# ---------- booked transactions (the Reports view) ----------
+#
+# A report reads the LEDGER, not the projection: every booked transaction in the
+# window, exactly as Firefly III recorded it. Nothing matched, nothing settled.
+
+
+def _booked(tid, date, desc, amount, rtype="withdrawal", cur="BRL",
+            src="Checking", dst="Merchant", cat="Groceries"):
+    return {"id": tid, "type": rtype, "date": dt.date.fromisoformat(date),
+            "amount": amount, "currency": cur, "source": src, "destination": dst,
+            "category": cat, "description": desc, "tags": []}
+
+
+def test_transactions_are_clipped_to_the_exact_window(monkeypatch):
+    """`fetch_transactions` widens by MATCH_DAYS so the forecast can see settlements
+    just outside the window. A report must NOT inherit that: a July report showing an
+    August charge is simply wrong."""
+    rows = [_booked("a", "2026-06-29", "before", 10.0),
+            _booked("b", "2026-07-01", "first day", 20.0),
+            _booked("c", "2026-07-31", "last day", 30.0),
+            _booked("d", "2026-08-02", "after", 40.0)]
+    monkeypatch.setattr(f, "fetch_transactions", lambda s, e: rows)
+    res = f.build_transactions(dt.date(2026, 7, 1), dt.date(2026, 7, 31))
+    assert [t["description"] for t in res["transactions"]] == ["first day", "last day"]
+    assert res["meta"]["count"] == 2
+
+
+def test_transactions_totals_are_per_currency_and_never_cross_sum(monkeypatch):
+    """Totals are per ISO code. A summed mixed-currency number is a bug and a lie."""
+    rows = [_booked("a", "2026-07-02", "rent", 1000.0),
+            _booked("b", "2026-07-03", "hosting", 142.0, cur="USD"),
+            _booked("c", "2026-07-28", "salary", 5000.0, rtype="deposit")]
+    monkeypatch.setattr(f, "fetch_transactions", lambda s, e: rows)
+    res = f.build_transactions(dt.date(2026, 7, 1), dt.date(2026, 7, 31))
+    assert res["currencies"]["BRL"] == {"out": 1000.0, "in": 5000.0, "net": 4000.0}
+    assert res["currencies"]["USD"] == {"out": 142.0, "in": 0.0, "net": -142.0}
+
+
+def test_transfers_are_listed_but_not_summed_into_in_out(monkeypatch):
+    """A transfer moves money between the user's own accounts — it is neither income
+    nor expense, so it appears in the list and stays out of the in/out totals."""
+    rows = [_booked("a", "2026-07-05", "savings sweep", 2500.0, rtype="transfer",
+                    dst="Savings", cat=None)]
+    monkeypatch.setattr(f, "fetch_transactions", lambda s, e: rows)
+    res = f.build_transactions(dt.date(2026, 7, 1), dt.date(2026, 7, 31))
+    assert res["meta"]["count"] == 1
+    assert res["transactions"][0]["type"] == "transfer"
+    # No in/out entry at all for a currency that only saw transfers — same rule the
+    # forecast payload follows. The browser reads the currency set off the rows,
+    # so a transfers-only currency still gets its own card.
+    assert "BRL" not in res["currencies"]
+
+
+def test_uncategorised_transaction_keeps_a_null_category(monkeypatch):
+    """Firefly leaves the category null when there is none. It is passed through as
+    null — the browser buckets those, rather than the engine inventing a label."""
+    rows = [_booked("a", "2026-07-05", "mystery", 12.0, cat=None)]
+    monkeypatch.setattr(f, "fetch_transactions", lambda s, e: rows)
+    res = f.build_transactions(dt.date(2026, 7, 1), dt.date(2026, 7, 31))
+    assert res["transactions"][0]["category"] is None
+
+
+def test_transactions_are_sorted_by_date_then_description(monkeypatch):
+    """A stable order out of the engine, so the browser's ranking is deterministic
+    when two rows tie on amount."""
+    rows = [_booked("a", "2026-07-09", "zebra", 1.0),
+            _booked("b", "2026-07-09", "alpha", 2.0),
+            _booked("c", "2026-07-02", "middle", 3.0)]
+    monkeypatch.setattr(f, "fetch_transactions", lambda s, e: rows)
+    res = f.build_transactions(dt.date(2026, 7, 1), dt.date(2026, 7, 31))
+    assert [t["description"] for t in res["transactions"]] == ["middle", "alpha", "zebra"]

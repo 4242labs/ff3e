@@ -11,11 +11,20 @@ ones — rent, salary, that streaming subscription. But it won't lay the recurri
 ones out in front of you and tell you which are quietly overdue and which are
 still ahead.
 
-Entropy for Firefly III does exactly that, and nothing else. It's a read-only
-view that **complements** Firefly III: point it at your instance, and it projects
-every recurring transaction forward, matches each expected occurrence against
-your real booked transactions, and then shows you **only what's left** — the
+Entropy for Firefly III does exactly that. It's a read-only view that
+**complements** Firefly III: point it at your instance, and it projects every
+recurring transaction forward, matches each expected occurrence against your
+real booked transactions, and then shows you **only what's left** — the
 outstanding set.
+
+Two views, and they answer opposite questions:
+
+| View | Question | Reads |
+| --- | --- | --- |
+| **Outstanding & Upcoming** | what is *coming*, and what quietly slipped | your recurring transactions, projected |
+| **Reports** | what actually *happened* over a window | your booked transactions, ranked |
+
+Both are read-only. Entropy writes nothing back to Firefly III, ever.
 
 Every occurrence you see is in one of two states:
 
@@ -90,6 +99,8 @@ flagged `cycle_unknown`. Unknown is reported, never guessed.
 
 ## What you see
 
+### Outstanding & Upcoming
+
 - **Day / Month / Year** — one period at a time, with a picker to jump anywhere.
 - **Overdue** — everything unconfirmed and already due, including the months
   behind you.
@@ -109,6 +120,35 @@ flagged `cycle_unknown`. Unknown is reported, never guessed.
   item — its options are the same account universe as the Account facet, but
   chosen independently of it. Accounts left ungrouped keep their normal item
   rows alongside the subtotals.
+
+### Reports
+
+![Entropy for Firefly III — Reports: booked transactions ranked by category, one card per currency](docs/reports.png)
+
+A different question: not *what is coming* but *what happened*. Reports reads
+your **booked transactions** straight from Firefly III — no matching, no
+settlement, no projection. Just the ledger, ranked.
+
+- **Period** — day, month, year, or a **custom start→end range**.
+- **View** — **Transactions** (one bar per transaction, with its date) or
+  **Categories** (the same transactions rolled up by category, with a count).
+  Anything Firefly left uncategorised is bucketed as *Uncategorised* rather
+  than dropped.
+- **Per month** — one card per calendar month instead of one for the window,
+  each ranked and scaled on its own, so a quiet month's biggest line still
+  fills its own card.
+- One card **per currency** (× per month, with that toggle on). Totals never
+  cross-sum currencies. A lone card takes the full row; more than one splits it
+  two-up and wraps.
+- Ranked largest first, **25 rows a page**. Bar length is a row's share of the
+  largest row in the *whole* list, not the visible page, so lengths stay
+  comparable as you page. Colour is the direction — expense, income, transfer.
+- The same Type / Category / Account / Currency facets as the forecast view.
+  **Card totals always cover the whole window, never the visible page.**
+
+A category that both spends and receives stays two bars — netting them would
+hide both halves — and the direction joins its label so the pair never reads as
+a duplicate.
 
 ## Run it
 
@@ -137,6 +177,17 @@ browser can't call it directly. The Entropy server holds the token, reads, and
 hands back JSON. **It writes nothing back to Firefly III.** Your recurring
 transactions can stay paused; they'll never auto-post because of this.
 
+Two read-only endpoints, one per view:
+
+| Endpoint | Serves | Returns |
+| --- | --- | --- |
+| `GET /api/forecast` | Outstanding & Upcoming | projected occurrences still outstanding, bucketed by period |
+| `GET /api/transactions` | Reports | every booked transaction in `start`…`end`, flat, with per-currency totals |
+
+Neither filters server-side: each view fetches its window **once**, unfiltered,
+and every facet, grouping and page is applied in the browser — so narrowing a
+report costs no round-trip.
+
 The entire Firefly III coupling is two functions in `server/forecast.py` —
 `fetch_recurrences()` and `fetch_transactions()`. Everything else is
 ledger-agnostic.
@@ -158,10 +209,14 @@ Fixtures in `web/src/fixtures/` are synthetic — no real financial data.
 `npm run build:demo` builds a fully static bundle with no server dependency:
 `fetchForecast` short-circuits straight to the fixtures, so the demo works
 from a plain static host (this is what powers the GitHub Pages demo above).
-`web/src/fixtures/projections-demo-story.json` is the fixture behind it — a
-hand-written, entirely fictional forecast with an overdue backlog, a couple
-of needs-review items, and both income and expenses, so a first-time visitor
-sees the product's whole point without connecting anything.
+`web/src/fixtures/projections-demo-story.json` is the fixture behind the
+forecast view — a hand-written, entirely fictional forecast with an overdue
+backlog, a couple of needs-review items, and both income and expenses, so a
+first-time visitor sees the product's whole point without connecting anything.
+`web/src/fixtures/transactions-demo.json` is the equivalent for Reports: a
+synthetic three-month ledger, two currencies, all three directions. Both fixtures
+ignore the requested window — a fixture cannot answer an arbitrary range, and
+interpolating one would mean inventing financial data.
 
 ## Configuration
 
@@ -183,6 +238,7 @@ subpath) purely via build-time flags — no fork needed. Set these when running 
 | --- | --- | --- |
 | `VITE_BASE` | `./` | Public base path when the SPA is mounted under a subpath, e.g. `/entropy/`. |
 | `VITE_API_BASE` | `api/forecast` | The forecast endpoint the SPA calls (override if you proxy it elsewhere, e.g. `/projections/data`). |
+| `VITE_TX_API_BASE` | `api/transactions` | The Reports endpoint, likewise. A second route, not a parameter on the first — so a proxying consumer has to place both. |
 | `VITE_AUTH_RELOAD` | off | Set to `1` when the server sits behind an auth proxy (e.g. Cloudflare Access): an expired session (opaque redirect / non-JSON) triggers a one-shot reload to re-authenticate instead of a stuck error. |
 
 ## License

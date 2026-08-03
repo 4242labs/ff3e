@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react'
-import { CalendarClock } from 'lucide-react'
+import { BarChart3, CalendarClock } from 'lucide-react'
 
 import { BrandMark } from '@/components/Brand'
 import { Wordmark } from '@/components/Wordmark'
@@ -16,20 +16,29 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '@/components/ui/sidebar'
+import type { AppView } from '@/lib/types'
 
 interface NavItem {
-  key: string
+  key: AppView
   label: string
   icon: ComponentType<{ className?: string }>
 }
 
-// One entry per view. Entropy for Firefly III ships a single view today
-// (Outstanding & Upcoming); adding another later is a new row here (+ a router
-// when there's more than one). The nav LABEL is the only place the view is
-// named — the header bar deliberately carries no title.
-const NAV: NavItem[] = [{ key: 'forecast', label: 'Outstanding & Upcoming', icon: CalendarClock }]
+// One entry per view. The nav LABEL is the only place a view is named — the
+// header bar deliberately carries no title. Selection is state, not a route
+// (see App.tsx); a new page is a new row here.
+const NAV: NavItem[] = [
+  { key: 'forecast', label: 'Outstanding & Upcoming', icon: CalendarClock },
+  { key: 'reports', label: 'Reports', icon: BarChart3 },
+]
 
-export function AppSidebar({ activeView = 'forecast' }: { activeView?: string }) {
+export function AppSidebar({
+  activeView = 'forecast',
+  onNavigate,
+}: {
+  activeView?: AppView
+  onNavigate?: (view: AppView) => void
+}) {
   return (
     <Sidebar collapsible="icon">
       {/*
@@ -64,7 +73,11 @@ export function AppSidebar({ activeView = 'forecast' }: { activeView?: string })
           <SidebarMenu>
             {NAV.map((item) => (
               <SidebarMenuItem key={item.key}>
-                <SidebarMenuButton isActive={item.key === activeView} tooltip={item.label}>
+                <SidebarMenuButton
+                  isActive={item.key === activeView}
+                  tooltip={item.label}
+                  onClick={() => onNavigate?.(item.key)}
+                >
                   <item.icon />
                   <span>{item.label}</span>
                 </SidebarMenuButton>
