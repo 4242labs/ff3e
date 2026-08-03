@@ -136,8 +136,12 @@ export type AppView = 'forecast' | 'reports'
  */
 export type ReportPeriodMode = Granularity | 'custom'
 
-/** What one bar means: a single booked transaction, or a whole category. */
-export type ReportView = 'transactions' | 'categories'
+/**
+ * What one bar means: a single booked transaction, a whole category, or one of
+ * the user's own accounts. `transactions` splits further via the Group toggle,
+ * which collapses the list onto the seller.
+ */
+export type ReportView = 'transactions' | 'categories' | 'accounts'
 
 export function isCustomPeriod(mode: ReportPeriodMode): mode is 'custom' {
   return mode === 'custom'

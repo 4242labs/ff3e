@@ -1,4 +1,4 @@
-import { CalendarRange, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
+import { CalendarRange, ChevronLeft, ChevronRight, RefreshCw, Store } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -27,11 +27,13 @@ const PERIOD_OPTIONS: { value: ReportPeriodMode; label: string; short?: string }
   { value: 'custom', label: 'Custom range', short: 'Custom' },
 ]
 
-// What one bar means. Both read the same booked transactions; they differ only
-// in whether each transaction gets its own bar or is rolled into its category.
+// What one bar means. All three read the same booked transactions; they differ
+// only in what each transaction is collapsed onto — itself, its category, or the
+// account of the user's own that it moved through.
 const VIEW_OPTIONS: { value: ReportView; label: string }[] = [
   { value: 'transactions', label: 'Transactions' },
   { value: 'categories', label: 'Categories' },
+  { value: 'accounts', label: 'Accounts' },
 ]
 
 export interface ReportsNavProps {
@@ -52,6 +54,9 @@ export interface ReportsNavProps {
   /** One card per calendar month, instead of one per currency for the window. */
   groupByMonth: boolean
   onGroupByMonthChange: (on: boolean) => void
+  /** One bar per seller, instead of one per transaction. */
+  groupBySeller: boolean
+  onGroupBySellerChange: (on: boolean) => void
   filterOptions: FilterOptions | null
   filters: ActiveFilters
   onFiltersChange: (f: ActiveFilters) => void
@@ -83,6 +88,8 @@ export function ReportsNav(props: ReportsNavProps) {
     onViewChange,
     groupByMonth,
     onGroupByMonthChange,
+    groupBySeller,
+    onGroupBySellerChange,
     filterOptions,
     filters,
     onFiltersChange,
@@ -91,6 +98,14 @@ export function ReportsNav(props: ReportsNavProps) {
   } = props
 
   const isCustom = isCustomPeriod(periodMode)
+
+  // A Month period is already one month: splitting it per month would produce
+  // the identical single card. The toggle stays visible (so its existence is
+  // still discoverable) but goes inert, rather than offering a no-op.
+  const perMonthInert = periodMode === 'month'
+  // Grouping by seller only means anything where the bars ARE transactions. The
+  // other Views have already rolled up onto their own subject.
+  const groupInert = view !== 'transactions'
 
   return (
     <header className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -149,16 +164,50 @@ export function ReportsNav(props: ReportsNavProps) {
           onChange={([v]) => onViewChange(v as ReportView)}
         />
 
+        {/* Both toggles render pressed only while they are live: a disabled
+            control still painted "on" claims an effect the report is not having.
+            `disabled` carries the greying itself, from the button's own DS
+            variant — nothing bespoke.
+
+            On/off is signalled the way FacetedFilter already signals it two
+            controls to the right — dashed border for "nothing set", solid
+            `secondary` for "set" — so the whole header reads by one rule. The
+            first cut laid a `bg-secondary` class over `outline` instead, which
+            in dark mode was near-invisible: outline already paints
+            `bg-input/30`, so pressing only took it to /50 — the same colour,
+            20% more opaque. */}
         <Button
-          variant="outline"
+          variant={groupByMonth && !perMonthInert ? 'secondary' : 'outline'}
           size="sm"
-          className={cn('h-8', groupByMonth && 'bg-secondary text-secondary-foreground')}
+          className={cn('h-8', !(groupByMonth && !perMonthInert) && 'border-dashed')}
           onClick={() => onGroupByMonthChange(!groupByMonth)}
-          aria-pressed={groupByMonth}
-          title="One card per calendar month"
+          disabled={perMonthInert}
+          aria-pressed={groupByMonth && !perMonthInert}
+          title={
+            perMonthInert
+              ? 'The period is already a single month'
+              : 'One card per calendar month'
+          }
         >
           <CalendarRange className="mr-2 h-4 w-4" />
           Per month
+        </Button>
+
+        <Button
+          variant={groupBySeller && !groupInert ? 'secondary' : 'outline'}
+          size="sm"
+          className={cn('h-8', !(groupBySeller && !groupInert) && 'border-dashed')}
+          onClick={() => onGroupBySellerChange(!groupBySeller)}
+          disabled={groupInert}
+          aria-pressed={groupBySeller && !groupInert}
+          title={
+            groupInert
+              ? 'Only applies to the Transactions view'
+              : 'One bar per seller, instead of one per transaction'
+          }
+        >
+          <Store className="mr-2 h-4 w-4" />
+          Group
         </Button>
 
         <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
