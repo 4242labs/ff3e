@@ -123,20 +123,28 @@ flagged `cycle_unknown`. Unknown is reported, never guessed.
 
 ### Reports
 
-![Entropy for Firefly III — Reports: booked transactions ranked by category, one card per currency](docs/reports.png)
+![Entropy for Firefly III — Reports: booked transactions ranked by seller, one card per currency](docs/reports.png)
 
 A different question: not *what is coming* but *what happened*. Reports reads
 your **booked transactions** straight from Firefly III — no matching, no
 settlement, no projection. Just the ledger, ranked.
 
 - **Period** — day, month, year, or a **custom start→end range**.
-- **View** — **Transactions** (one bar per transaction, with its date) or
-  **Categories** (the same transactions rolled up by category, with a count).
-  Anything Firefly left uncategorised is bucketed as *Uncategorised* rather
-  than dropped.
-- **Per month** — one card per calendar month instead of one for the window,
+- **View** — what one bar stands for:
+  - **Transactions** — one bar per transaction, with its date.
+  - **Categories** — the same transactions rolled up by category, with a count.
+    Anything Firefly left uncategorised is bucketed as *Uncategorised* rather
+    than dropped.
+  - **Accounts** — rolled up by *your own* account: a withdrawal's source, a
+    deposit's destination. A transfer touches two of your accounts and counts
+    under both, because it left one and arrived at the other.
+- **Group** (📦, Transactions view only) — collapse the list onto the **seller**:
+  the far end of the transaction, which Firefly models as an expense account on
+  a withdrawal and a revenue account on a deposit, so the side follows the
+  direction. Inert on the other Views, which already roll up.
+- **Per month** (📅) — one card per calendar month instead of one for the window,
   each ranked and scaled on its own, so a quiet month's biggest line still
-  fills its own card.
+  fills its own card. Inert when Period is already *Month*.
 - One card **per currency** (× per month, with that toggle on). Totals never
   cross-sum currencies. A lone card takes the full row; more than one splits it
   two-up and wraps.
@@ -150,9 +158,13 @@ settlement, no projection. Just the ledger, ranked.
   accounts is neither earned nor spent. Never income *added to* expenses, which
   would be a number that means nothing.
 
-A category that both spends and receives stays two bars — netting them would
+Any bucket that both spends and receives stays two bars — netting them would
 hide both halves — and the direction joins its label so the pair never reads as
-a duplicate.
+a duplicate. That is why an account you both get paid into and spend from shows
+as *Checking · Income* and *Checking · Expense*.
+
+Both toggles keep their setting while inert, so switching Period or View back
+restores what you had rather than silently clearing it.
 
 ## Run it
 

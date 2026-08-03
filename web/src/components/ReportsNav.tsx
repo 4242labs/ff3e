@@ -67,9 +67,12 @@ export interface ReportsNavProps {
 /**
  * The Reports header — the same single bar Outstanding & Upcoming uses, with
  * the same affordances in the same places, so moving between the two pages
- * costs no relearning. Left: Period (what window) and its navigator. Right: the
- * data facets (how you are narrowing it) and refresh. View sits with Period,
- * because together they define what the report IS.
+ * costs no relearning.
+ *
+ * Two runs, split by whitespace rather than a rule. Left: Period and its
+ * navigator — WHICH WINDOW you are looking at. Right, flush and evenly spaced:
+ * View, the two toggles, the data facets, refresh — WHAT you are looking at
+ * within that window and how you are narrowing it.
  */
 export function ReportsNav(props: ReportsNavProps) {
   const {
@@ -106,6 +109,11 @@ export function ReportsNav(props: ReportsNavProps) {
   // Grouping by seller only means anything where the bars ARE transactions. The
   // other Views have already rolled up onto their own subject.
   const groupInert = view !== 'transactions'
+  // What each toggle is actually doing to the report right now — which is what
+  // it must render, not the intent ReportsPage is holding behind an inert
+  // control. Must stay the same masking ReportsPage applies before building.
+  const perMonthOn = groupByMonth && !perMonthInert
+  const groupOn = groupBySeller && !groupInert
 
   return (
     <header className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -185,12 +193,12 @@ export function ReportsNav(props: ReportsNavProps) {
               and the label is carried by `aria-label` + `title` rather than
               spending header width on two words apiece. */}
           <Button
-            variant={groupByMonth && !perMonthInert ? 'secondary' : 'outline'}
+            variant={perMonthOn ? 'secondary' : 'outline'}
             size="icon"
-            className={cn('h-8 w-8', !(groupByMonth && !perMonthInert) && 'border-dashed')}
+            className={cn('h-8 w-8', !perMonthOn && 'border-dashed')}
             onClick={() => onGroupByMonthChange(!groupByMonth)}
             disabled={perMonthInert}
-            aria-pressed={groupByMonth && !perMonthInert}
+            aria-pressed={perMonthOn}
             aria-label="One card per calendar month"
             title={
               perMonthInert
@@ -202,12 +210,12 @@ export function ReportsNav(props: ReportsNavProps) {
           </Button>
 
           <Button
-            variant={groupBySeller && !groupInert ? 'secondary' : 'outline'}
+            variant={groupOn ? 'secondary' : 'outline'}
             size="icon"
-            className={cn('h-8 w-8', !(groupBySeller && !groupInert) && 'border-dashed')}
+            className={cn('h-8 w-8', !groupOn && 'border-dashed')}
             onClick={() => onGroupBySellerChange(!groupBySeller)}
             disabled={groupInert}
-            aria-pressed={groupBySeller && !groupInert}
+            aria-pressed={groupOn}
             aria-label="One bar per seller"
             title={
               groupInert

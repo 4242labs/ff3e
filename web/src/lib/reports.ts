@@ -38,7 +38,7 @@ const UNNAMED_LABEL = '(unnamed)'
  * grain, so a toggle that is inactive for the current View simply doesn't reach
  * here.
  */
-export type Grain = 'transaction' | 'seller' | 'category' | 'account'
+type Grain = 'transaction' | 'seller' | 'category' | 'account'
 
 export interface ReportOptions {
   view: ReportView
