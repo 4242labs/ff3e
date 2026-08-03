@@ -1,17 +1,10 @@
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatMoney } from '@/lib/format'
-import {
-  FLOW_LABEL,
-  PAGE_SIZE,
-  pageCount,
-  pageOf,
-  type Flow,
-  type ReportCard,
-} from '@/lib/reports'
+import { FLOW_LABEL, pageCount, pageOf, type Flow, type ReportCard } from '@/lib/reports'
 
 /** Bar colour by direction. Expense is the report's main subject and takes the
  * accent; income and transfers are distinguished so a mixed list stays readable
@@ -36,7 +29,7 @@ export interface ReportChartProps {
  * colour and dimension comes off the token layer, so it themes with the app.
  */
 export function ReportChart({ data }: ReportChartProps) {
-  const { title, currency, rows, totals, max } = data
+  const { title, currency, rows, max } = data
   const pages = pageCount(rows.length)
   const [page, setPage] = useState(0)
 
@@ -47,32 +40,78 @@ export function ReportChart({ data }: ReportChartProps) {
   }, [pages])
 
   const visible = pageOf(rows, page)
-  const first = rows.length === 0 ? 0 : page * PAGE_SIZE + 1
-  const last = Math.min(rows.length, (page + 1) * PAGE_SIZE)
+
+  // Net of what this card is showing: income MINUS expenses. Adding the two
+  // together produces a number that means nothing — the first cut of this footer
+  // did exactly that and reported 9,600 of income plus 705 of spend as "10,305".
+  // Transfers are excluded outright: money moved between the user's own accounts
+  // is neither earned nor spent.
+  const shown = visible.reduce(
+    (sum, row) => (row.flow === 'in' ? sum + row.total : row.flow === 'out' ? sum - row.total : sum),
+    0,
+  )
 
   return (
     <Card className="gap-2 py-4">
-      <CardHeader>
+      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-x-4 gap-y-2 space-y-0">
         <CardTitle className="text-sm">{title}</CardTitle>
+
+        {/* Pagination rides in the header's right corner. The design system
+            publishes no pagination primitive (see REGISTRY.md), so this is
+            composed from the adopted `button` rather than hand-rolled — a
+            bespoke primitive would fail DS gate 3, and adding one to the
+            registry is a design-system change, not this app's to make. */}
+        {pages > 1 && (
+          <nav className="flex items-center gap-1" aria-label={`${title} pages`}>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              disabled={page === 0}
+              aria-label="Previous page"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+            </Button>
+            <span className="w-16 text-center text-xs tabular-nums text-muted-foreground">
+              {page + 1} / {pages}
+            </span>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setPage((p) => Math.min(pages - 1, p + 1))}
+              disabled={page >= pages - 1}
+              aria-label="Next page"
+            >
+              <ChevronRight className="h-3.5 w-3.5" />
+            </Button>
+          </nav>
+        )}
       </CardHeader>
 
       <CardContent className="flex flex-col gap-3">
-        {/* Proportional widths, not fixed ones: cards divide a row, so the same
-            row markup has to hold at full width and at a sixth of it. */}
-        <div className="flex flex-col gap-1.5">
+        {/* One grid for the whole list, so the four columns align across rows.
+            The label column is `max-content` — sized to the longest label rather
+            than a fixed fraction, which is what kept short category names pinned
+            to the right of an empty third. It is capped so a long transaction
+            description cannot starve the bar. */}
+        <div
+          className="grid items-center gap-x-2 gap-y-1.5"
+          style={{
+            gridTemplateColumns: 'minmax(0, max-content) 1fr max-content max-content',
+          }}
+        >
           {visible.map((row) => (
-            <div key={row.key} className="flex items-center gap-2">
-              <div
-                className="min-w-0 basis-1/3 truncate text-right text-xs text-muted-foreground"
-                title={row.label}
-              >
+            <Fragment key={row.key}>
+              <div className="max-w-56 truncate text-right text-xs text-muted-foreground" title={row.label}>
                 {row.label}
               </div>
 
-              {/* The track is the remaining width; the bar is this row's share of
-                  the largest row in the whole list — not of the visible page — so
-                  bar lengths stay comparable as you page through. */}
-              <div className="h-5 min-w-0 flex-1 overflow-hidden rounded-sm bg-muted">
+              {/* The bar is this row's share of the largest row in the whole
+                  list — not of the visible page — so lengths stay comparable as
+                  you page through. */}
+              <div className="h-5 min-w-0 overflow-hidden rounded-sm bg-muted">
                 <div
                   className="h-full rounded-sm"
                   title={FLOW_LABEL[row.flow]}
@@ -83,62 +122,24 @@ export function ReportChart({ data }: ReportChartProps) {
                 />
               </div>
 
-              <div className="shrink-0 whitespace-nowrap text-right font-mono text-xs tabular-nums">
+              <div className="whitespace-nowrap text-right font-mono text-xs tabular-nums">
                 {formatMoney(row.total, currency)}
               </div>
-              <div
-                className="min-w-0 basis-1/6 truncate text-xs tabular-nums text-muted-foreground"
-                title={row.detail}
-              >
+              <div className="whitespace-nowrap text-xs tabular-nums text-muted-foreground">
                 {row.detail}
               </div>
-            </div>
+            </Fragment>
           ))}
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2 text-xs text-muted-foreground">
-          <span className="tabular-nums">
-            {rows.length === 0
-              ? 'No transactions'
-              : `${first}–${last} of ${rows.length}`}
+        {/* The total of what this card is showing. Card-title styling, so it
+            reads as the figure the card resolves to rather than a footnote. */}
+        <div className="flex justify-end border-t border-border pt-2">
+          <span className="text-sm leading-none font-semibold tabular-nums">
+            {formatMoney(shown, currency)}
           </span>
-
-          {/* Totals for the WHOLE window, never the visible page — a page total
-              would read as a period total and quietly mislead. */}
-          <span className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono tabular-nums">
-            {totals.out > 0 && <span>out {formatMoney(totals.out, currency)}</span>}
-            {totals.in > 0 && <span>in {formatMoney(totals.in, currency)}</span>}
-            {totals.xfer > 0 && <span>transfers {formatMoney(totals.xfer, currency)}</span>}
-          </span>
-
-          {pages > 1 && (
-            <span className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-7 w-7"
-                onClick={() => setPage((p) => Math.max(0, p - 1))}
-                disabled={page === 0}
-                aria-label={`Previous page of ${currency} rows`}
-              >
-                <ChevronLeft className="h-3.5 w-3.5" />
-              </Button>
-              <span className="w-16 text-center tabular-nums">
-                {page + 1} / {pages}
-              </span>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-7 w-7"
-                onClick={() => setPage((p) => Math.min(pages - 1, p + 1))}
-                disabled={page >= pages - 1}
-                aria-label={`Next page of ${currency} rows`}
-              >
-                <ChevronRight className="h-3.5 w-3.5" />
-              </Button>
-            </span>
-          )}
         </div>
+
       </CardContent>
     </Card>
   )

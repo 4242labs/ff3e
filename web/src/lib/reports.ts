@@ -52,8 +52,6 @@ export interface ReportCard {
   monthKey: string | null
   /** Ranked, largest first. Every row, unpaged — the card pages it for display. */
   rows: ReportRow[]
-  /** Totals across the whole list, not just the visible page. */
-  totals: { out: number; in: number; xfer: number }
   /** The largest row total, i.e. what a full-width bar represents. */
   max: number
 }
@@ -107,12 +105,10 @@ export function buildReport(
         currency,
         monthKey,
         rows: [],
-        totals: { out: 0, in: 0, xfer: 0 },
         max: 0,
       }
       byCard.set(cardKey, bucket)
     }
-    bucket.totals[flow] += tx.amount
 
     if (view === 'categories') {
       // One bar per category. An uncategorised transaction is bucketed, never
