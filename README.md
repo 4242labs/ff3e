@@ -140,11 +140,15 @@ settlement, no projection. Just the ledger, ranked.
 - One card **per currency** (× per month, with that toggle on). Totals never
   cross-sum currencies. A lone card takes the full row; more than one splits it
   two-up and wraps.
-- Ranked largest first, **25 rows a page**. Bar length is a row's share of the
-  largest row in the *whole* list, not the visible page, so lengths stay
-  comparable as you page. Colour is the direction — expense, income, transfer.
+- Ranked largest first, **25 rows a page** (paging sits in the card header). Bar
+  length is a row's share of the largest row in the *whole* list, not the visible
+  page, so lengths stay comparable as you page. Colour is the direction —
+  expense, income, transfer.
 - The same Type / Category / Account / Currency facets as the forecast view.
-  **Card totals always cover the whole window, never the visible page.**
+- Each card closes with **one figure: the net of what that card is showing** —
+  income minus expenses, transfers excluded, since money moved between your own
+  accounts is neither earned nor spent. Never income *added to* expenses, which
+  would be a number that means nothing.
 
 A category that both spends and receives stays two bars — netting them would
 hide both halves — and the direction joins its label so the pair never reads as
