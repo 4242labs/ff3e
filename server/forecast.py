@@ -697,11 +697,20 @@ def _card_installments(txns: list, cards: dict, today: dt.date,
                     flag = "cycle_projected"
                 if not (start <= d <= end):
                     continue
+                # Same rule the recurrence path applies below (`elif d < today:
+                # needs_review`): a projected tail installment whose date has
+                # already passed, with nothing accounting for it, is NOT "nothing
+                # to do yet" — it is exactly what this project defines as
+                # needs_review. Hardcoding "upcoming" here regardless of `d` was
+                # the one place that contract was broken: a genuinely overdue
+                # installment reported the same status as one due next month, so
+                # nothing keying off status could tell them apart.
+                status = "needs_review" if d < today else "upcoming"
                 item = {
                     "date": d.isoformat(), "title": _clean_title(p["description"]),
                     "type": "withdrawal", "amount": p["amount"], "currency": cur,
                     "source": psrc, "destination": None, "category": cat,
-                    "status": "upcoming", "matched_txn_id": None, "mechanism": "fatura",
+                    "status": status, "matched_txn_id": None, "mechanism": "fatura",
                     "remaining": remaining, "installment_no": n + k,
                     "installment_total": m,
                 }
