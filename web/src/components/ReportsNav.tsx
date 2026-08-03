@@ -1,4 +1,4 @@
-import { CalendarRange, ChevronLeft, ChevronRight, RefreshCw, Store } from 'lucide-react'
+import { CalendarRange, ChevronLeft, ChevronRight, Group, RefreshCw } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -175,42 +175,49 @@ export function ReportsNav(props: ReportsNavProps) {
             first cut laid a `bg-secondary` class over `outline` instead, which
             in dark mode was near-invisible: outline already paints
             `bg-input/30`, so pressing only took it to /50 — the same colour,
-            20% more opaque. */}
+            20% more opaque.
+
+            Icon-only, like Refresh: both are switches, not labelled choices,
+            and the label is carried by `aria-label` + `title` rather than
+            spending header width on two words apiece. */}
         <Button
           variant={groupByMonth && !perMonthInert ? 'secondary' : 'outline'}
-          size="sm"
-          className={cn('h-8', !(groupByMonth && !perMonthInert) && 'border-dashed')}
+          size="icon"
+          className={cn('h-8 w-8', !(groupByMonth && !perMonthInert) && 'border-dashed')}
           onClick={() => onGroupByMonthChange(!groupByMonth)}
           disabled={perMonthInert}
           aria-pressed={groupByMonth && !perMonthInert}
+          aria-label="One card per calendar month"
           title={
             perMonthInert
-              ? 'The period is already a single month'
-              : 'One card per calendar month'
+              ? 'Per month — the period is already a single month'
+              : 'Per month — one card per calendar month'
           }
         >
-          <CalendarRange className="mr-2 h-4 w-4" />
-          Per month
+          <CalendarRange className="h-4 w-4" />
         </Button>
 
         <Button
           variant={groupBySeller && !groupInert ? 'secondary' : 'outline'}
-          size="sm"
-          className={cn('h-8', !(groupBySeller && !groupInert) && 'border-dashed')}
+          size="icon"
+          className={cn('h-8 w-8', !(groupBySeller && !groupInert) && 'border-dashed')}
           onClick={() => onGroupBySellerChange(!groupBySeller)}
           disabled={groupInert}
           aria-pressed={groupBySeller && !groupInert}
+          aria-label="One bar per seller"
           title={
             groupInert
-              ? 'Only applies to the Transactions view'
-              : 'One bar per seller, instead of one per transaction'
+              ? 'Group — only applies to the Transactions view'
+              : 'Group — one bar per seller, instead of one per transaction'
           }
         >
-          <Store className="mr-2 h-4 w-4" />
-          Group
+          <Group className="h-4 w-4" />
         </Button>
 
-        <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+        {/* Same group as View and the two toggles — no `ml-auto`, so the facets
+            sit directly alongside them rather than being pushed to the far edge
+            and reading as a separate bar. */}
+        <div className="flex flex-wrap items-center gap-2">
           {filterOptions && (
             <FilterBar options={filterOptions} filters={filters} onChange={onFiltersChange} />
           )}
