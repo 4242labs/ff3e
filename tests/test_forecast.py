@@ -956,3 +956,27 @@ def test_transactions_are_sorted_by_date_then_description(monkeypatch):
     monkeypatch.setattr(f, "fetch_transactions", lambda s, e: rows)
     res = f.build_transactions(dt.date(2026, 7, 1), dt.date(2026, 7, 31))
     assert [t["description"] for t in res["transactions"]] == ["middle", "alpha", "zebra"]
+
+
+def test_derived_installment_past_due_date_is_needs_review(monkeypatch):
+    """A finite installment's projected tail date can itself fall in the past (the
+    statement closed, but nothing has settled it yet). The contract this project
+    states — a passed date with nothing accounting for it is `needs_review` — has
+    to hold here too, identically to the recurrence path's `elif d < today` rule.
+
+    Hardcoding "upcoming" regardless of `d` was the one place it did not: a
+    genuinely overdue installment reported the same status as one due next month,
+    so nothing keying off status could tell them apart. Found downstream, where a
+    consumer had patched its vendored copy rather than this one."""
+    today = dt.date(2026, 8, 15)
+    charges = [_charge("2026-06-02", 9, 12, amount=100.0)]
+    _wire(monkeypatch, [], charges, cards={"Itaucard": _cyc4()})
+    res = f.build_projection(granularity="month", start=dt.date(2026, 1, 1),
+                             end=dt.date(2026, 12, 31), today=today)
+    out = _outstanding(res)
+    assert out["2026-07-02"]["status"] == "needs_review"   # past due (today is 08-15)
+    assert out["2026-08-02"]["status"] == "needs_review"   # past due (08-02 < 08-15)
+    assert out["2026-09-02"]["status"] == "upcoming"       # still ahead
+    # nothing else about the projection changes
+    assert out["2026-09-02"]["installment_no"] == 12
+    assert out["2026-08-02"]["mechanism"] == "fatura"
