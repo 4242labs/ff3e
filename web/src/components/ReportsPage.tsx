@@ -23,11 +23,6 @@ import {
   type ReportView,
 } from '@/lib/types'
 
-const VIEW_CAPTION: Record<ReportView, string> = {
-  transactions: 'one bar per transaction',
-  categories: 'grouped by category',
-}
-
 /**
  * Reports — the ledger, ranked.
  *
@@ -95,10 +90,6 @@ export function ReportsPage() {
     return [...seen]
   }, [report])
 
-  // Grouped by month, each card's title already names its window — repeating the
-  // whole range on every card would be noise in a narrow column.
-  const caption = groupByMonth ? VIEW_CAPTION[view] : `${label} · ${VIEW_CAPTION[view]}`
-
   return (
     <>
       <ReportsNav
@@ -150,7 +141,7 @@ export function ReportsPage() {
                   className={cn('grid gap-4', report.length > 1 ? 'md:grid-cols-2' : 'grid-cols-1')}
                 >
                   {report.map((bucket) => (
-                    <ReportChart key={bucket.key} data={bucket} caption={caption} />
+                    <ReportChart key={bucket.key} data={bucket} />
                   ))}
                 </div>
                 <ReportFlowLegend flows={flowsPresent} />

@@ -24,8 +24,6 @@ const FLOW_COLOR: Record<Flow, string> = {
 
 export interface ReportChartProps {
   data: ReportCard
-  /** Caption beside the title — the window and what a bar means. */
-  caption: string
 }
 
 /**
@@ -37,7 +35,7 @@ export interface ReportChartProps {
  * belong on the row itself, and the list has to stay legible at 25 rows. Every
  * colour and dimension comes off the token layer, so it themes with the app.
  */
-export function ReportChart({ data, caption }: ReportChartProps) {
+export function ReportChart({ data }: ReportChartProps) {
   const { title, currency, rows, totals, max } = data
   const pages = pageCount(rows.length)
   const [page, setPage] = useState(0)
@@ -54,9 +52,8 @@ export function ReportChart({ data, caption }: ReportChartProps) {
 
   return (
     <Card className="gap-2 py-4">
-      <CardHeader className="flex flex-row flex-wrap items-baseline justify-between gap-x-4 gap-y-1 space-y-0">
+      <CardHeader>
         <CardTitle className="text-sm">{title}</CardTitle>
-        <p className="text-xs text-muted-foreground">{caption}</p>
       </CardHeader>
 
       <CardContent className="flex flex-col gap-3">
