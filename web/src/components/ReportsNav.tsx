@@ -154,77 +154,80 @@ export function ReportsNav(props: ReportsNavProps) {
           </div>
         )}
 
-        <Separator orientation="vertical" className="mx-1 hidden h-5 sm:block" />
+        {/* Everything from View rightward is one right-aligned run at a single
+            gap — no separator, because the `ml-auto` whitespace is already the
+            boundary and a rule inside the run would break the even spacing the
+            group is built on. Left of it: what window you are looking at. Right
+            of it: what you are looking at, and how you are narrowing it. */}
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          <FacetedFilter
+            title="View"
+            single
+            options={VIEW_OPTIONS}
+            selected={[view]}
+            onChange={([v]) => onViewChange(v as ReportView)}
+          />
 
-        <FacetedFilter
-          title="View"
-          single
-          options={VIEW_OPTIONS}
-          selected={[view]}
-          onChange={([v]) => onViewChange(v as ReportView)}
-        />
+          {/* Both toggles render pressed only while they are live: a disabled
+              control still painted "on" claims an effect the report is not having.
+              `disabled` carries the greying itself, from the button's own DS
+              variant — nothing bespoke.
 
-        {/* Both toggles render pressed only while they are live: a disabled
-            control still painted "on" claims an effect the report is not having.
-            `disabled` carries the greying itself, from the button's own DS
-            variant — nothing bespoke.
+              On/off is signalled the way FacetedFilter already signals it two
+              controls to the right — dashed border for "nothing set", solid
+              `secondary` for "set" — so the whole header reads by one rule. The
+              first cut laid a `bg-secondary` class over `outline` instead, which
+              in dark mode was near-invisible: outline already paints
+              `bg-input/30`, so pressing only took it to /50 — the same colour,
+              20% more opaque.
 
-            On/off is signalled the way FacetedFilter already signals it two
-            controls to the right — dashed border for "nothing set", solid
-            `secondary` for "set" — so the whole header reads by one rule. The
-            first cut laid a `bg-secondary` class over `outline` instead, which
-            in dark mode was near-invisible: outline already paints
-            `bg-input/30`, so pressing only took it to /50 — the same colour,
-            20% more opaque.
+              Icon-only, like Refresh: both are switches, not labelled choices,
+              and the label is carried by `aria-label` + `title` rather than
+              spending header width on two words apiece. */}
+          <Button
+            variant={groupByMonth && !perMonthInert ? 'secondary' : 'outline'}
+            size="icon"
+            className={cn('h-8 w-8', !(groupByMonth && !perMonthInert) && 'border-dashed')}
+            onClick={() => onGroupByMonthChange(!groupByMonth)}
+            disabled={perMonthInert}
+            aria-pressed={groupByMonth && !perMonthInert}
+            aria-label="One card per calendar month"
+            title={
+              perMonthInert
+                ? 'Per month — the period is already a single month'
+                : 'Per month — one card per calendar month'
+            }
+          >
+            <CalendarRange className="h-4 w-4" />
+          </Button>
 
-            Icon-only, like Refresh: both are switches, not labelled choices,
-            and the label is carried by `aria-label` + `title` rather than
-            spending header width on two words apiece. */}
-        <Button
-          variant={groupByMonth && !perMonthInert ? 'secondary' : 'outline'}
-          size="icon"
-          className={cn('h-8 w-8', !(groupByMonth && !perMonthInert) && 'border-dashed')}
-          onClick={() => onGroupByMonthChange(!groupByMonth)}
-          disabled={perMonthInert}
-          aria-pressed={groupByMonth && !perMonthInert}
-          aria-label="One card per calendar month"
-          title={
-            perMonthInert
-              ? 'Per month — the period is already a single month'
-              : 'Per month — one card per calendar month'
-          }
-        >
-          <CalendarRange className="h-4 w-4" />
-        </Button>
+          <Button
+            variant={groupBySeller && !groupInert ? 'secondary' : 'outline'}
+            size="icon"
+            className={cn('h-8 w-8', !(groupBySeller && !groupInert) && 'border-dashed')}
+            onClick={() => onGroupBySellerChange(!groupBySeller)}
+            disabled={groupInert}
+            aria-pressed={groupBySeller && !groupInert}
+            aria-label="One bar per seller"
+            title={
+              groupInert
+                ? 'Group — only applies to the Transactions view'
+                : 'Group — one bar per seller, instead of one per transaction'
+            }
+          >
+            <Group className="h-4 w-4" />
+          </Button>
 
-        <Button
-          variant={groupBySeller && !groupInert ? 'secondary' : 'outline'}
-          size="icon"
-          className={cn('h-8 w-8', !(groupBySeller && !groupInert) && 'border-dashed')}
-          onClick={() => onGroupBySellerChange(!groupBySeller)}
-          disabled={groupInert}
-          aria-pressed={groupBySeller && !groupInert}
-          aria-label="One bar per seller"
-          title={
-            groupInert
-              ? 'Group — only applies to the Transactions view'
-              : 'Group — one bar per seller, instead of one per transaction'
-          }
-        >
-          <Group className="h-4 w-4" />
-        </Button>
-
-        {/* Same group as View and the two toggles — no `ml-auto`, so the facets
-            sit directly alongside them rather than being pushed to the far edge
-            and reading as a separate bar. */}
-        <div className="flex flex-wrap items-center gap-2">
+          {/* A fragment — its buttons are direct children of the run above, so
+              they carry the same gap as everything else in it. */}
           {filterOptions && (
             <FilterBar options={filterOptions} filters={filters} onChange={onFiltersChange} />
           )}
+
           <Button
             variant="outline"
             size="icon"
-            className={cn('h-8 w-8')}
+            className="h-8 w-8"
             onClick={onRefresh}
             disabled={loading}
             aria-label="Refresh"
