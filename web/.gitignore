@@ -1,6 +1,6 @@
 # dist/ is a build artifact (`npm run build`) — not committed. The server
 # picks it up from web/dist, or from wherever WEB_DIST points.
-node_modules/
+node_modules
 dist/
 .DS_Store
 *.local
