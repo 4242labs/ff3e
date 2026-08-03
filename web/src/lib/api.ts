@@ -1,4 +1,4 @@
-import type { Granularity, ProjectionsResponse } from './types'
+import type { Granularity, ProjectionsResponse, TransactionsResponse } from './types'
 
 // The forecast endpoint. Defaults to the relative `api/forecast` this server
 // exposes; override with VITE_API_BASE at build time when the SPA is mounted
@@ -59,6 +59,16 @@ export async function fetchForecast(params: FetchForecastParams): Promise<Projec
     // synthetic fixtures. Compiled out of a production build.
     if (import.meta.env.DEV) return loadFixture(params.granularity, false)
     throw networkErr
+  }
+
+  // The other half of that dev convenience. With the `/api` dev proxy configured
+  // (vite.config.ts), an unreachable server never reaches the catch above: Vite
+  // answers the request itself with a 500, so `fetch` resolves and the fallback
+  // was unreachable in exactly the situation it exists for. A 5xx under `npm run
+  // dev` means "no server here" — take the fixtures. Compiled out of any
+  // production build, where a 5xx is a real error and must surface as one.
+  if (import.meta.env.DEV && res.status >= 500) {
+    return loadFixture(params.granularity, false)
   }
 
   // Auth-proxy interception (session expired): an opaque redirect or a
@@ -132,4 +142,92 @@ async function loadFixture(granularity: Granularity, demo: boolean): Promise<Pro
         }
       ).default
   }
+}
+
+// ---------------------------------------------------------------------------
+// Booked transactions — the Reports view
+// ---------------------------------------------------------------------------
+
+// Its own endpoint, and its own override, because a consumer that proxies the
+// forecast under a custom path (VITE_API_BASE) has to be able to place this one
+// too — it is a second route, not a query parameter on the first.
+const TX_ENDPOINT = import.meta.env.VITE_TX_API_BASE || 'api/transactions'
+
+export interface FetchTransactionsParams {
+  start: string // ISO date
+  end: string // ISO date
+}
+
+/**
+ * Every booked transaction in one window. Like the forecast round-trip, this is
+ * fetched unfiltered exactly once per window — grouping, ranking, filtering and
+ * paging all happen in the browser, so changing any of them costs nothing.
+ */
+export async function fetchTransactions(
+  params: FetchTransactionsParams,
+): Promise<TransactionsResponse> {
+  if (import.meta.env.MODE === 'demo') return loadTransactionsFixture()
+
+  const qs = new URLSearchParams({ start: params.start, end: params.end })
+
+  let res: Response
+  try {
+    res = await fetch(`${TX_ENDPOINT}?${qs.toString()}`, {
+      headers: { Accept: 'application/json' },
+      ...(AUTH_RELOAD ? { redirect: 'manual' as RequestRedirect } : {}),
+    })
+  } catch (networkErr) {
+    if (import.meta.env.DEV) return loadTransactionsFixture()
+    throw networkErr
+  }
+
+  // With the `/api` dev proxy configured, an unreachable server does not raise a
+  // network error — Vite answers 500 itself — so the catch above never fires in
+  // the situation the fallback exists for. DEV only; in a production build a 5xx
+  // is a real error and surfaces as one.
+  if (import.meta.env.DEV && res.status >= 500) return loadTransactionsFixture()
+
+  if (AUTH_RELOAD) {
+    if (res.type === 'opaqueredirect') {
+      throw new AuthExpiredError('Redirected — auth session likely expired')
+    }
+    const contentType = res.headers.get('content-type') || ''
+    if (!contentType.includes('application/json')) {
+      throw new AuthExpiredError(`Unexpected content-type: ${contentType || '(none)'}`)
+    }
+  }
+
+  let body: unknown
+  try {
+    body = await res.json()
+  } catch {
+    if (AUTH_RELOAD) throw new AuthExpiredError('Response was not valid JSON')
+    throw new Error(`Server returned ${res.status} ${res.statusText} (not JSON)`)
+  }
+
+  if (!res.ok) {
+    const detail =
+      body && typeof body === 'object' && 'detail' in (body as Record<string, unknown>)
+        ? String((body as Record<string, unknown>).detail)
+        : `Request failed: ${res.status} ${res.statusText}`
+    throw new Error(detail)
+  }
+
+  return body as TransactionsResponse
+}
+
+/**
+ * The synthetic ledger behind the dev fallback and the static demo build.
+ *
+ * It ignores the requested window — a fixture cannot answer an arbitrary range,
+ * and interpolating one would be inventing financial data. So the same three
+ * months come back whatever the period control says. Against a real server the
+ * window is honoured exactly.
+ */
+async function loadTransactionsFixture(): Promise<TransactionsResponse> {
+  return (
+    (await import('../fixtures/transactions-demo.json')) as unknown as {
+      default: TransactionsResponse
+    }
+  ).default
 }

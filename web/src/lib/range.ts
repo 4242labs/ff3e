@@ -1,4 +1,4 @@
-import type { Granularity, ViewMode } from './types'
+import type { Granularity, ReportPeriodMode, ViewMode } from './types'
 
 /** How far back the cumulative views (Overdue / Due this month) look for
  * still-unconfirmed obligations. The engine needs a bounded start date; 12
@@ -105,6 +105,33 @@ export function cumulativeRange(
 export function rangeForMode(mode: ViewMode, anchor: string, today: Date = new Date()): RangeQuery {
   if (mode === 'outstanding' || mode === 'month_end') return cumulativeRange(mode, today)
   return singlePeriodRange(mode, anchor)
+}
+
+/**
+ * The window a Reports timeframe asks the engine for. The three calendar modes
+ * defer to `singlePeriodRange` — identical behaviour to Outstanding & Upcoming,
+ * which is the point. A custom window is passed through as-is; the granularity
+ * it carries is vestigial, since a report ranks its window as a whole rather
+ * than bucketing it.
+ *
+ * A reversed custom range (end before start) is swapped rather than refused —
+ * picking the two ends in either order is a normal thing to do.
+ */
+export function reportRange(
+  mode: ReportPeriodMode,
+  anchor: string,
+  custom: { start: string; end: string },
+): RangeQuery {
+  if (mode !== 'custom') return singlePeriodRange(mode, anchor)
+  const [start, end] =
+    custom.start <= custom.end ? [custom.start, custom.end] : [custom.end, custom.start]
+  return { granularity: 'month', start, end }
+}
+
+/** Caption for a custom window: "Jan 1, 2026 → Mar 31, 2026". */
+export function customRangeLabel(custom: { start: string; end: string }): string {
+  const { start, end } = reportRange('custom', custom.start, custom)
+  return `${_dayLabel.format(anchorToDate(start))} → ${_dayLabel.format(anchorToDate(end))}`
 }
 
 // 3-letter month (not "July") so the Month field is compact and — since every

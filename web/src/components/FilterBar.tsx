@@ -19,9 +19,12 @@ export interface FilterBarProps {
   /** Data-table-only: which asset account(s) to collapse into a subtotal row
    * per period instead of one row per item. A multi-select whose OPTIONS are
    * every asset account in the dataset (same universe as Account) —
-   * independent of what's currently selected in Account. */
-  groupAccounts: string[]
-  onGroupAccountsChange: (accounts: string[]) => void
+   * independent of what's currently selected in Account.
+   *
+   * Omitted on surfaces that have no item table to group (Reports), where the
+   * facet would be a control that does nothing. */
+  groupAccounts?: string[]
+  onGroupAccountsChange?: (accounts: string[]) => void
 }
 
 /** The four data facets (+ Group, a fifth facet over the same account
@@ -72,12 +75,14 @@ export function FilterBar({
         selected={filters.account}
         onChange={(v) => set('account', v)}
       />
-      <FacetedFilter
-        title="Group"
-        options={options.accounts.map((a) => ({ value: a, label: a }))}
-        selected={groupAccounts}
-        onChange={onGroupAccountsChange}
-      />
+      {groupAccounts && onGroupAccountsChange && (
+        <FacetedFilter
+          title="Group"
+          options={options.accounts.map((a) => ({ value: a, label: a }))}
+          selected={groupAccounts}
+          onChange={onGroupAccountsChange}
+        />
+      )}
       <FacetedFilter
         title="Currency"
         options={options.currencies.map((c) => ({ value: c, label: c }))}

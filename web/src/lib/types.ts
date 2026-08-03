@@ -120,3 +120,52 @@ export function isCumulativeMode(mode: ViewMode): boolean {
 /** Two mutually-exclusive top-level displays: the stat cards + charts, or the
  * item table. Not a filter — a whole different page body. */
 export type DashboardMode = 'dashboard' | 'data'
+
+// ---------------------------------------------------------------------------
+// Reports
+// ---------------------------------------------------------------------------
+
+/** Which page the sidebar has selected. */
+export type AppView = 'forecast' | 'reports'
+
+/**
+ * The Reports timeframe. The three calendar granularities behave exactly as
+ * they do on Outstanding & Upcoming (one navigable period at a time); `custom`
+ * is an arbitrary start→end window, which the forecast view has no equivalent
+ * of.
+ */
+export type ReportPeriodMode = Granularity | 'custom'
+
+/** What one bar means: a single booked transaction, or a whole category. */
+export type ReportView = 'transactions' | 'categories'
+
+export function isCustomPeriod(mode: ReportPeriodMode): mode is 'custom' {
+  return mode === 'custom'
+}
+
+// --- Booked transactions (GET /api/transactions) ------------------------------
+// The ledger as Firefly III recorded it — what Reports ranks. Distinct from
+// ProjectionItem, which is a FORECAST occurrence: an expected payment that may
+// never have happened. These have. Nothing here is matched, settled, or guessed.
+
+export interface BookedTransaction {
+  /** Firefly's transaction-group id. Not unique per row — a split transaction
+   * shares one id across its legs — so it is not a React key on its own. */
+  id: string | null
+  date: string
+  description: string
+  type: ItemType
+  amount: number
+  currency: string
+  source: string | null
+  destination: string | null
+  /** Null when Firefly has no category on it. Bucketed, never dropped. */
+  category: string | null
+}
+
+export interface TransactionsResponse {
+  range: { start: string; end: string }
+  currencies: Record<string, { out: number; in: number; net: number }>
+  transactions: BookedTransaction[]
+  meta: { count: number }
+}

@@ -1,7 +1,7 @@
 /*
  * 42labs Design System — tokens.css (auto-generated; DO NOT EDIT).
- * Version 0.6.0 · commit 4a79a8e · source-touched 2026-07-13T16:17:17-03:00
- * Source: https://github.com/4242labs/design-system/blob/4a79a8e/src/app/globals.css
+ * Version 0.7.0 · commit 076a6e3 · source-touched 2026-07-14T12:49:30-03:00
+ * Source: https://github.com/4242labs/design-system/blob/076a6e3/src/app/globals.css
  * Contains layers 1-3 of globals.css (raw palette + semantic + scale).
  * Layer 4 (@theme inline Tailwind bridge) and layer 5 (layout primitives) are NOT included.
  */
@@ -61,14 +61,16 @@
   --amber-dark: #7A5600;
   --blue: #2E6FD6;
   --blue-dark: #1F53A8;
-  --sky: #DCEAFB;
-  --blue-border: #BBD5F5;
+  --info-subtle-light: #DCEAFB;
+  --info-border-light: #BBD5F5;
   --success-subtle-light: #DCF5E4;
   --success-border-light: #B7E6C8;
   --error-subtle-light: #FBE0DE;
   --error-border-light: #F3C2BE;
   --warning-subtle-light: #FDF0C9;
   --warning-border-light: #F2DE9C;
+  --sky: var(--info-subtle-light);
+  --blue-border: var(--info-border-light);
   --emerald-light: #5FD996;
   --red-light: #F4756A;
   --amber-light: #EEC55B;
