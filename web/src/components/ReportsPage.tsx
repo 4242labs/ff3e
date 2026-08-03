@@ -38,13 +38,31 @@ export function ReportsPage() {
   const [custom, setCustom] = useState(persisted.custom)
   const [view, setView] = useState<ReportView>(persisted.view)
   const [groupByMonth, setGroupByMonth] = useState(persisted.groupByMonth)
+  const [groupBySeller, setGroupBySeller] = useState(persisted.groupBySeller)
   const [filters, setFilters] = useState<ActiveFilters>(persisted.filters)
 
   useEffect(() => {
-    saveReportsState({ periodMode, anchor, custom, view, groupByMonth, filters })
-  }, [periodMode, anchor, custom, view, groupByMonth, filters])
+    saveReportsState({
+      periodMode,
+      anchor,
+      custom,
+      view,
+      groupByMonth,
+      groupBySeller,
+      filters,
+    })
+  }, [periodMode, anchor, custom, view, groupByMonth, groupBySeller, filters])
 
   const isCustom = isCustomPeriod(periodMode)
+
+  // Both toggles are *intent*, held across the states where they do not apply —
+  // a Month period, or a View that has already rolled up. Storing the intent and
+  // masking it here means switching back restores what the user had set, rather
+  // than silently clearing it behind a disabled control. The mask must match
+  // ReportsNav's `perMonthInert` / `groupInert` exactly, or the header would
+  // show a toggle the report is not honouring.
+  const monthCards = groupByMonth && periodMode !== 'month'
+  const sellerBars = groupBySeller && view === 'transactions'
 
   const range = useMemo(
     () => reportRange(periodMode, anchor, custom),
@@ -81,8 +99,12 @@ export function ReportsPage() {
 
   const report = useMemo(() => {
     if (!data) return []
-    return buildReport(filterTransactions(data.transactions, filters), view, groupByMonth)
-  }, [data, filters, view, groupByMonth])
+    return buildReport(filterTransactions(data.transactions, filters), {
+      view,
+      groupByMonth: monthCards,
+      groupBySeller: sellerBars,
+    })
+  }, [data, filters, view, monthCards, sellerBars])
 
   const flowsPresent = useMemo(() => {
     const seen = new Set<Flow>()
@@ -108,6 +130,8 @@ export function ReportsPage() {
         onViewChange={setView}
         groupByMonth={groupByMonth}
         onGroupByMonthChange={setGroupByMonth}
+        groupBySeller={groupBySeller}
+        onGroupBySellerChange={setGroupBySeller}
         filterOptions={filterOptions}
         filters={filters}
         onFiltersChange={setFilters}

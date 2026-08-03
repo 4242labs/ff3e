@@ -3,7 +3,8 @@
 // A report answers "how much, on what, over this window". Whichever View is
 // selected, the shape is the same: collapse the window's transactions onto a
 // subject, rank the subjects by total, page through them. Only the definition of
-// "subject" changes — the transaction itself, or its category.
+// "subject" changes — the transaction itself, its seller, its category, or the
+// account it moved through.
 
 import { UNCATEGORISED, type FilterOptions } from './filters'
 import type { BookedTransaction, ItemType, ReportView } from './types'
@@ -26,6 +27,67 @@ export const FLOW_LABEL: Record<Flow, string> = {
 /** Bucket label for a transaction Firefly left uncategorised. */
 const UNCATEGORISED_LABEL = 'Uncategorised'
 
+/** Bucket label for a transaction with no name on the end being ranked. Firefly
+ * normally names both ends, so this is a data gap, not a category — but the
+ * money is real, so it is bucketed rather than dropped. */
+const UNNAMED_LABEL = '(unnamed)'
+
+/**
+ * What one bar stands for. Derived from the View filter plus the Group toggle,
+ * never stored — the UI holds intent ("Group is on"), this holds the resolved
+ * grain, so a toggle that is inactive for the current View simply doesn't reach
+ * here.
+ */
+type Grain = 'transaction' | 'seller' | 'category' | 'account'
+
+export interface ReportOptions {
+  view: ReportView
+  /** One card per calendar month, on top of the per-currency split. */
+  groupByMonth?: boolean
+  /** Transactions view only: collapse onto the seller instead of listing each
+   * transaction. Ignored under any other View, which already rolls up. */
+  groupBySeller?: boolean
+}
+
+function grainOf({ view, groupBySeller }: ReportOptions): Grain {
+  if (view === 'categories') return 'category'
+  if (view === 'accounts') return 'account'
+  return groupBySeller ? 'seller' : 'transaction'
+}
+
+/**
+ * The seller — the far end of the transaction, the party that is not the user.
+ *
+ * Firefly models it as an expense account on a withdrawal (the merchant) and a
+ * revenue account on a deposit (the payer), which is why the side flips with the
+ * direction. A transfer has no seller at all — both ends are the user's own — so
+ * it reports the receiving account, which is the only honest answer to "where
+ * did this go".
+ */
+function sellerOf(tx: BookedTransaction): string {
+  const far = tx.type === 'deposit' ? tx.source : tx.destination
+  return far ?? UNNAMED_LABEL
+}
+
+/** The bucket(s) one transaction contributes to at this grain. A transfer
+ * touches TWO of the user's own accounts and is counted under both — it left one
+ * and arrived at the other, and a report that dropped either end would under-
+ * report that account's movement. */
+function bucketsOf(tx: BookedTransaction, grain: Grain): string[] {
+  switch (grain) {
+    case 'category':
+      return [tx.category ?? UNCATEGORISED_LABEL]
+    case 'seller':
+      return [sellerOf(tx)]
+    case 'account': {
+      const own = ownAccountsOf(tx)
+      return own.length ? own : [UNNAMED_LABEL]
+    }
+    case 'transaction':
+      return []
+  }
+}
+
 /** Rows per page. A month can hold hundreds of transactions; the card shows a
  * page at a time rather than a scroll with no end in sight. */
 export const PAGE_SIZE = 25
@@ -34,10 +96,10 @@ export interface ReportRow {
   /** Unique within its currency's list. */
   key: string
   label: string
-  /** Secondary line: the date for a transaction, the count for a category. */
+  /** Secondary line: the date for a transaction, the count for a rollup. */
   detail: string
   total: number
-  /** Transactions rolled into this row (1 for the Transactions view). */
+  /** Transactions rolled into this row (1 when the grain is the transaction). */
   count: number
   flow: Flow
 }
@@ -85,9 +147,10 @@ function monthLabel(iso: string): string {
  */
 export function buildReport(
   transactions: BookedTransaction[],
-  view: ReportView,
-  groupByMonth = false,
+  options: ReportOptions,
 ): ReportCard[] {
+  const { groupByMonth = false } = options
+  const grain = grainOf(options)
   const byCard = new Map<string, ReportCard>()
   const byRow = new Map<string, ReportRow>()
 
@@ -110,21 +173,23 @@ export function buildReport(
       byCard.set(cardKey, bucket)
     }
 
-    if (view === 'categories') {
-      // One bar per category. An uncategorised transaction is bucketed, never
-      // dropped — "no category" is a real answer with a real total. Flow is part
-      // of the key: a category that both spends and receives is two honest bars,
-      // not one netted-out number.
-      const label = tx.category ?? UNCATEGORISED_LABEL
-      const rowKey = `${cardKey}|cat|${flow}|${label}`
-      let row = byRow.get(rowKey)
-      if (!row) {
-        row = { key: rowKey, label, detail: '', total: 0, count: 0, flow }
-        byRow.set(rowKey, row)
-        bucket.rows.push(row)
+    if (grain !== 'transaction') {
+      // One bar per bucket — category, seller, or account. A transaction with
+      // nothing on that end is bucketed, never dropped: "no category" and "no
+      // payee" are real answers with real totals. Flow is part of the key, so a
+      // bucket that both spends and receives is two honest bars rather than one
+      // netted-out number.
+      for (const label of bucketsOf(tx, grain)) {
+        const rowKey = `${cardKey}|${grain}|${flow}|${label}`
+        let row = byRow.get(rowKey)
+        if (!row) {
+          row = { key: rowKey, label, detail: '', total: 0, count: 0, flow }
+          byRow.set(rowKey, row)
+          bucket.rows.push(row)
+        }
+        row.total += tx.amount
+        row.count += 1
       }
-      row.total += tx.amount
-      row.count += 1
     } else {
       // One bar per transaction. Firefly's id is per transaction GROUP, so a
       // split transaction reuses it across its legs — the row counter keeps the
@@ -148,8 +213,8 @@ export function buildReport(
     // Largest first — a report is a ranking. Ties fall back to the label, so the
     // order is stable across renders instead of depending on insertion.
     bucket.rows.sort((a, b) => b.total - a.total || a.label.localeCompare(b.label))
-    if (view === 'categories') {
-      // A category that both spends and receives is two rows, on purpose — netting
+    if (grain !== 'transaction') {
+      // A bucket that both spends and receives is two rows, on purpose — netting
       // them would hide both halves. But two rows reading "Uncategorised" look
       // like a duplicate, so the direction goes into the label whenever a name
       // occurs under more than one flow.

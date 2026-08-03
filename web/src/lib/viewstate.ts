@@ -14,7 +14,7 @@ const KEY = 'entropy:viewstate'
 const REPORTS_KEY = 'entropy:reports'
 const MODES: ViewMode[] = ['day', 'month', 'year', 'outstanding', 'month_end']
 const REPORT_PERIOD_MODES: ReportPeriodMode[] = ['day', 'month', 'year', 'custom']
-const REPORT_VIEWS: ReportView[] = ['transactions', 'categories']
+const REPORT_VIEWS: ReportView[] = ['transactions', 'categories', 'accounts']
 const ANCHOR_RE = /^\d{4}-\d{2}-\d{2}$/
 const FACETS = ['type', 'category', 'account', 'currency'] as const
 
@@ -91,6 +91,8 @@ export interface ReportsState {
   view: ReportView
   /** One card per calendar month instead of one per currency for the window. */
   groupByMonth: boolean
+  /** Transactions view: one bar per seller instead of one per transaction. */
+  groupBySeller: boolean
   filters: ActiveFilters
 }
 
@@ -104,6 +106,7 @@ export function defaultReportsState(): ReportsState {
     custom: { start: shiftAnchor('month', today, -2), end: today },
     view: 'transactions',
     groupByMonth: false,
+    groupBySeller: false,
     filters: EMPTY_FILTERS,
   }
 }
@@ -137,6 +140,7 @@ export function loadReportsState(): ReportsState {
       custom: sanitizeCustom(p.custom),
       view: isReportView(p.view) ? p.view : d.view,
       groupByMonth: typeof p.groupByMonth === 'boolean' ? p.groupByMonth : d.groupByMonth,
+      groupBySeller: typeof p.groupBySeller === 'boolean' ? p.groupBySeller : d.groupBySeller,
       filters: sanitizeFilters(p.filters),
     }
   } catch {

@@ -2,7 +2,6 @@ import { X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { FacetedFilter } from '@/components/FacetedFilter'
-import { cn } from '@/lib/utils'
 import { EMPTY_FILTERS, hasActiveFilters, type FilterOptions } from '@/lib/filters'
 import type { ActiveFilters, ItemType } from '@/lib/types'
 
@@ -43,19 +42,24 @@ export function FilterBar({
 
   return (
     <>
-      {/* Fixed slot, always mounted — only its visibility toggles — so the
-          rest of the bar never shifts when a filter is cleared/set. */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className={cn('h-8 w-8', !active && 'invisible')}
-        onClick={() => onChange(EMPTY_FILTERS)}
-        disabled={!active}
-        aria-label="Clear filters"
-        title="Clear filters"
-      >
-        <X className="h-4 w-4" />
-      </Button>
+      {/* Rendered only when there is something to clear. This used to be a
+          fixed slot, always mounted and merely `invisible`, so the bar never
+          shifted when a filter went on or off — but an empty 32px button plus
+          its two gaps left a 48px hole in a run whose every other gap is 8px,
+          and that asymmetry is visible on every load while the shift it avoids
+          happens only at the moment you set the first filter. */}
+      {active && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => onChange(EMPTY_FILTERS)}
+          aria-label="Clear filters"
+          title="Clear filters"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      )}
 
       <FacetedFilter
         title="Type"
