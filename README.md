@@ -1,5 +1,8 @@
 # Entropy for Firefly III
 
+[![Project Status: Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
+[![Maintenance](https://img.shields.io/badge/maintenance-passively--maintained-yellowgreen.svg)](CONTRIBUTING.md)
+
 ![Entropy for Firefly III — Overdue view: a needs-review backlog with in/out/net, cash-flow, and category charts](docs/forecast.png)
 
 **[Live demo →](https://ff3e.42labs.io)** — 100% synthetic data, no Firefly III instance behind it.
