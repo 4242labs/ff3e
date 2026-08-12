@@ -260,7 +260,6 @@ subpath) purely via build-time flags — no fork needed. Set these when running 
 ## License
 
 Open source — [AGPL-3.0](LICENSE). Commercial — contact ahoy@42labs.io.
-Both, in full: [LICENSING.md](LICENSING.md).
 
 ---
 Built by [42labs](https://github.com/4242labs). Not affiliated with
