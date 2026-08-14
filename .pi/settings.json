@@ -1,0 +1,11 @@
+{
+  "packages": [
+    "npm:@dietrichgebert/ponytail@4.9.0",
+    "npm:pi-lens@3.8.74",
+    "npm:pi-simplify@0.2.3",
+    "npm:pi-web-access@0.22.0",
+    "npm:@gotgenes/pi-permission-system@25.1.0",
+    "npm:@juicesharp/rpiv-ask-user-question@2.4.0",
+    "npm:@howaboua/pi-codex-conversion@3.0.14"
+  ]
+}
