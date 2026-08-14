@@ -1,0 +1,7 @@
+{
+  "_note": "pi-web-access reads this from the USER-level path only — copy to ~/.pi/web-search.json (or $PI_CODING_AGENT_DIR / $XDG_CONFIG_HOME/pi). It is NOT read from the project. Tracked here as the canon-shaped example; canon §19 requires Exa primary with fallback, never the zero-config provider order.",
+  "searchRouting": {
+    "providers": ["exa", "searxng", "openai"],
+    "fallbackOn": ["error", "empty", "timeout"]
+  }
+}
