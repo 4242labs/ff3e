@@ -244,7 +244,11 @@ function Sidebar({
         <div
           data-sidebar="sidebar"
           data-slot="sidebar-inner"
-          className="flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow-sm"
+          // DS theming: the floating variant is an elevated card, so its edge is
+          // border-subtle, not --sidebar-border. The default (flush) variant keeps
+          // --sidebar-border — flush against the canvas it is a divider, not a card
+          // edge, and a divider still has to do the separating on its own.
+          className="flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-border-subtle group-data-[variant=floating]:shadow-sm"
         >
           {children}
         </div>

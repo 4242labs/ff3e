@@ -12,8 +12,11 @@ const buttonVariants = cva(
         default: "bg-primary text-primary-foreground hover:bg-primary/90",
         destructive:
           "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40",
+        // DS theming: border-input (= border-control) on BOTH modes. Upstream
+        // uses --border on light and --input on dark; that asymmetry left the
+        // light outline at 1.38:1 while dark cleared 3:1 for the same control.
         outline:
-          "border bg-background shadow-xs hover:bg-muted hover:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+          "border border-input bg-background shadow-xs hover:bg-muted hover:text-foreground dark:bg-input/30 dark:hover:bg-input/50",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost:
@@ -38,26 +41,20 @@ const buttonVariants = cva(
   }
 )
 
-// React 18 (not 19): a plain function component can't receive `ref` — Radix
-// needs a real DOM ref on this element whenever it's used as `asChild` under
-// a Trigger/Anchor (Popover, Dialog, ...) to measure and position floating
-// content. Without forwardRef, React silently drops the ref and Radix's
-// Popper has nothing to anchor to — the trigger still fires (state updates,
-// aria-expanded flips) but the floating panel renders with no real position,
-// effectively invisible. Every FacetedFilter (header filter chips) and
-// PeriodPicker popover was broken this way.
-const Button = React.forwardRef<
-  HTMLButtonElement,
-  React.ComponentProps<"button"> &
-    VariantProps<typeof buttonVariants> & {
-      asChild?: boolean
-    }
->(({ className, variant = "default", size = "default", asChild = false, ...props }, ref) => {
+function Button({
+  className,
+  variant = "default",
+  size = "default",
+  asChild = false,
+  ...props
+}: React.ComponentProps<"button"> &
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean
+  }) {
   const Comp = asChild ? Slot.Root : "button"
 
   return (
     <Comp
-      ref={ref}
       data-slot="button"
       data-variant={variant}
       data-size={size}
@@ -65,7 +62,6 @@ const Button = React.forwardRef<
       {...props}
     />
   )
-})
-Button.displayName = "Button"
+}
 
 export { Button, buttonVariants }

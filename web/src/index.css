@@ -15,6 +15,28 @@
 @custom-variant dark (&:is(body.theme-dark, body.theme-dark *));
 
 @theme inline {
+  /* DS semantic names, exposed as utilities under their own token names. The
+     registry primitives are written against these (the vendored sidebar paints
+     `bg-surface`), so they must resolve or those components render unpainted. */
+  --color-surface: var(--surface);
+  --color-surface-alt: var(--surface-alt);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-control: var(--border-control);
+  --color-fg: var(--fg);
+  --color-fg-2: var(--fg-2);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-disabled: var(--fg-disabled);
+  --color-accent-solid: var(--accent-solid);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-border: var(--accent-border);
+  --color-accent-on: var(--accent-on);
+  --color-logo: var(--logo);
+  --color-logo-word: var(--logo-word);
+  --color-link: var(--link);
+  --color-link-hover: var(--link-hover);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
@@ -57,9 +79,27 @@
   --font-heading: var(--font-heading);
   --font-mono: var(--font-mono);
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
+  /* The DS names its radius rungs by step and stops at --r-4 (10px); there is
+     no canon rung below 6px or above 10px. Tailwind's xs/xl utilities are used
+     by vendored primitives, so they are clamped to the nearest canon rung
+     rather than left on Tailwind's own defaults (2px / 12px) — which would be
+     a silent fork of the scale. */
+  --radius-xs: var(--r-2);
+  --radius-sm: var(--r-2);
+  --radius-md: var(--r-3);
+  --radius-lg: var(--r-4);
+  --radius-xl: var(--r-4);
+  --radius-full: var(--r-full);
+
+  /* Tailwind owns the --shadow-* namespace, so the DS publishes its elevation
+     rungs as --elev-*; pin them here and every primitive already writing
+     shadow-sm inherits DS elevation with no component edit. Mandatory since
+     0.9.0: --surface-alt now equals --surface (both --warm-0), so a card is
+     told apart from the page by its border and shadow alone. */
+  --shadow-xs: var(--elev-0);
+  --shadow-sm: var(--elev-1);
+  --shadow-md: var(--elev-2);
+  --shadow-lg: var(--elev-3);
 
   --animate-pulse-skeleton: pulse-skeleton 1.5s ease-in-out infinite;
 }
