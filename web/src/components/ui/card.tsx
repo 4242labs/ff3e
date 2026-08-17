@@ -7,7 +7,9 @@ function Card({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card"
       className={cn(
-        "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm",
+        // DS theming: border-subtle, not the inherited --border. Under shadow-sm
+        // (= --elev-1) the border defines the edge; it does not do the separating.
+        "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border border-border-subtle py-6 shadow-sm",
         className
       )}
       {...props}

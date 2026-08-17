@@ -30,7 +30,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: 4242labs/design-system
-          ref: v0.6.2 # namespace-aware Gate-3 fix (MEMO-DS-BUMP-0.6.2)
+          ref: 91346ebec48037b780265a2c43ba092970dae5ef # gate reads the registry from this checkout
           token: ${{ secrets.DS_ACTION_TOKEN }} # org secret: a Contents:read PAT
           path: web/.ds-action
 
@@ -40,8 +40,7 @@ jobs:
       - name: DS compliance — tokens, primitives, own-code drift
         run: node .ds-action/.github/actions/ds-compliance/consumer-check.mjs
         env:
-          DS_TOKENS_PIN: "0.7.0"
+          DS_TOKENS_PIN: "0.9.0"
           DS_TOKENS_FILE: "src/ds-tokens.css"
           DS_UI_DIR: "src/components/ui"
           DS_SCAN: "src"
-          DS_SKIP_DIFF: "1"  # CI cannot reach ds.42labs.io registry (Cloudflare 403s runner IPs); skip only the shadcn network diff — tokens + content gates still enforce (42L-1137)

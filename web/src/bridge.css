@@ -72,10 +72,13 @@
    * resolve to nothing, breaking every border in the app). ds-tokens.css
    * already defines `--border` with exactly the intended value (incl. the
    * `body.theme-dark` override), so no re-declaration is needed here — the
-   * alias is satisfied by omission. `--input` is a distinct name, so
-   * `var(--border)` below reads the token value with no cycle.
+   * alias is satisfied by omission.
+   *
+   * `--input` is the control boundary, not the card edge: WCAG 1.4.11 wants
+   * 3:1 for the visual information identifying a UI component, which `--border`
+   * does not reach. Since 0.9.0 the DS ships that as its own token.
    */
-  --input: var(--border);
+  --input: var(--border-control);
   --ring: var(--accent-focus);
 
   --radius: var(--r-3);
@@ -133,7 +136,7 @@ body.theme-dark {
   --destructive: var(--red);
   --destructive-foreground: var(--warm-0);
 
-  --input: var(--border);
+  --input: var(--border-control);
   --ring: var(--accent-focus);
 
   --sidebar: var(--surface-alt);
