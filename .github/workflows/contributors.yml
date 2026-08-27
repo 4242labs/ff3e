@@ -1,0 +1,104 @@
+# Keeps the avatar grid between the README's contributors markers current.
+#
+# Self-contained on purpose. The alternatives all put a THIRD PARTY between the
+# repo and its readers: contrib.rocks and all-contributors serve the image from
+# someone else's host, so every visitor's browser reports in there; a
+# marketplace action is a dependency in a repo that SHA-pins actions/checkout
+# precisely to avoid one. This reads GitHub's own API and points <img> at
+# GitHub's own avatar CDN. Nothing else is involved.
+#
+# Per repo you may need to change: the branch below (an app repo defaults to
+# `staging`), the cron minute (stagger across repos), and README_PATH if the
+# README is not at the root. Nothing else.
+
+name: contributors
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "12 4 * * 1"    # weekly safety net
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: contributors
+  cancel-in-progress: true
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      # Pinned to a commit SHA, not a tag, so the action cannot be silently
+      # repointed. dependabot keeps this current — see .github/dependabot.yml.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Rewrite the contributors block
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          README_PATH: README.md
+        run: |
+          python3 - <<'PY'
+          import json, os, re, subprocess, sys
+
+          repo   = os.environ["REPO"]
+          readme = os.environ.get("README_PATH", "README.md")
+          START, END, SIZE = "<!-- contributors:start -->", "<!-- contributors:end -->", 64
+
+          raw = subprocess.run(
+              ["gh", "api", "--paginate", f"repos/{repo}/contributors?per_page=100"],
+              capture_output=True, text=True, check=True).stdout
+          # Real people only. The API already sorts by contribution count.
+          people = [c for c in json.loads(raw) if c.get("type") != "Bot"]
+
+          def cell(c):
+              login, av = c["login"], c["avatar_url"]
+              sep = "&" if "?" in av else "?"
+              return (f'<a href="https://github.com/{login}" title="{login}">'
+                      f'<img src="{av}{sep}s={SIZE}" width="{SIZE}" height="{SIZE}" '
+                      f'alt="{login}" /></a>')
+
+          text = open(readme, encoding="utf-8").read()
+          if START not in text or END not in text:
+              sys.exit(f"contributors markers not found in {readme}")
+
+          block = "".join(cell(c) for c in people) or "_Be the first to contribute._"
+          text = re.sub(re.escape(START) + r"[\s\S]*?" + re.escape(END),
+                        lambda _: f"{START}\n{block}\n{END}", text)
+          open(readme, "w", encoding="utf-8").write(text)
+          PY
+
+      - name: Open a PR if it changed
+        env:
+          # The default branch takes changes through a PR, so a direct push from
+          # here is refused by branch protection. github.token is the normal
+          # case and has worked (4242labs/lgtm #59). GitHub does suppress
+          # workflow runs triggered by it, so IF this PR's required checks never
+          # start, set CONTRIBUTORS_PAT (fine-grained, contents +
+          # pull-requests write) and they will.
+          GH_TOKEN: ${{ secrets.CONTRIBUTORS_PAT || github.token }}
+        run: |
+          if git diff --quiet -- README.md; then
+            echo "no contributor changes"; exit 0
+          fi
+          # One standing branch, overwritten each time. It carries nothing but
+          # generated output and nobody works on it, so replacing its tip is the
+          # point rather than a hazard.
+          BRANCH=chore/contributors
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add README.md
+          git commit -m "docs(readme): refresh contributors"
+          git push --force -u origin "$BRANCH"
+          if [ -z "$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number')" ]; then
+            gh pr create --head "$BRANCH" \
+              --title "docs(readme): refresh contributors" \
+              --body "Contributor list changed. Block regenerated between the README markers by \`.github/workflows/contributors.yml\` — no hand edits."
+          else
+            echo "PR already open for $BRANCH — updated in place"
+          fi
