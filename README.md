@@ -260,6 +260,11 @@ subpath) purely via build-time flags — no fork needed. Set these when running 
 | `VITE_TX_API_BASE` | `api/transactions` | The Reports endpoint, likewise. A second route, not a parameter on the first — so a proxying consumer has to place both. |
 | `VITE_AUTH_RELOAD` | off | Set to `1` when the server sits behind an auth proxy (e.g. Cloudflare Access): an expired session (opaque redirect / non-JSON) triggers a one-shot reload to re-authenticate instead of a stuck error. |
 
+## Contributors
+
+<!-- contributors:start -->
+<!-- contributors:end -->
+
 ## License
 
 Open source — [AGPL-3.0](LICENSE). Commercial — contact ahoy@42labs.io.
