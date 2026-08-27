@@ -1,5 +1,5 @@
 # Stage 1 — build the SPA.
-FROM node:22-alpine AS web
+FROM node:25-alpine AS web
 WORKDIR /web
 COPY web/package.json web/package-lock.json ./
 RUN npm ci
