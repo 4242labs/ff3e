@@ -6,11 +6,10 @@
 # working this project, so identity, hard rules, and the active mandate survive
 # context loss. stdout is added to the session context by the SessionStart hook.
 #
-# Anchor homes searched (defaults; override via config):
-#   - project meta repo:      {project}/*-meta/agents/*-anchor.md
-#   - canon-repo layout:      {project}/agents/*-anchor.md
-#   - harness memory (cross-project agents / TRON modes), one per (agent, project):
-#     ~/.claude/projects/{project-dir-slug}/memory/*-anchor.md
+# Anchor home (principles-base §17): ~/.agent-anchors/{project}/{persona}.md — host-neutral,
+# untracked, outside every repo. No anchor lives in a repo, and none lives under a host runtime's
+# own directory. A project migrating off the old homes keeps them by listing them in the config
+# below until its migration commit lands.
 #
 # Config (optional): .claude/hooks/persona-anchors.config.json
 #   { "paths": ["glob", ...] }   — replaces the default glob set (project-relative
@@ -34,16 +33,34 @@ if [ -f "$cfg" ] && command -v jq >/dev/null 2>&1; then
 fi
 
 if [ ${#globs[@]} -eq 0 ]; then
-  slug=$(printf '%s' "$proj" | sed 's|[/.]|-|g')
-  globs=("$proj"/*-meta/agents/*-anchor.md
-         "$proj"/agents/*-anchor.md
-         "$HOME/.claude/projects/$slug/memory/"*-anchor.md)
+  # Anchors are keyed by the workspace directory name. A session's project dir is often
+  # deeper than that — a repo inside a multi-repo workspace ({workspace}/{repo}) or an added
+  # worktree ({workspace}/worktrees/{repo}--{branch}) — so walk up to the first ancestor that
+  # has an anchor directory. No ancestor has one → no anchors → silent no-op, as before.
+  d="$proj"
+  while [ "$d" != "/" ] && [ "$d" != "$HOME" ]; do
+    [ -d "$HOME/.agent-anchors/$(basename "$d")" ] && break
+    d="$(dirname "$d")"
+  done
+  globs=("$HOME/.agent-anchors/$(basename "$d")/"*.md)
 fi
 
 anchors=()
+seen=""
 for g in "${globs[@]}"; do
   for f in $g; do
-    [ -f "$f" ] && anchors+=("$f")
+    [ -f "$f" ] || continue
+    # Config globs may overlap, and a migrating project may still point at a symlink — resolve
+    # the link itself before collecting, or the same anchor is injected twice.
+    r="$f"
+    while [ -L "$r" ]; do
+      l="$(readlink "$r")"
+      case "$l" in /*) r="$l" ;; *) r="$(dirname "$r")/$l" ;; esac
+    done
+    r="$(cd "$(dirname "$r")" 2>/dev/null && printf '%s/%s' "$(pwd -P)" "$(basename "$r")")"
+    case " $seen " in *" $r "*) continue ;; esac
+    seen="$seen $r"
+    anchors+=("$f")
   done
 done
 
