@@ -7,7 +7,7 @@ COPY web/ ./
 RUN npm run build
 
 # Stage 2 — the server, with the built bundle baked in.
-FROM python:3.12-slim
+FROM python:3.14-slim
 WORKDIR /app
 
 COPY server/requirements.txt ./
