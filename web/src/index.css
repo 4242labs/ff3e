@@ -79,27 +79,19 @@
   --font-heading: var(--font-heading);
   --font-mono: var(--font-mono);
 
-  /* The DS names its radius rungs by step and stops at --r-4 (10px); there is
-     no canon rung below 6px or above 10px. Tailwind's xs/xl utilities are used
-     by vendored primitives, so they are clamped to the nearest canon rung
-     rather than left on Tailwind's own defaults (2px / 12px) — which would be
-     a silent fork of the scale. */
+  /* One 4px corner in DS 2.0.0. */
   --radius-xs: var(--r-2);
   --radius-sm: var(--r-2);
-  --radius-md: var(--r-3);
-  --radius-lg: var(--r-4);
-  --radius-xl: var(--r-4);
+  --radius-md: var(--r-2);
+  --radius-lg: var(--r-2);
+  --radius-xl: var(--r-2);
   --radius-full: var(--r-full);
 
-  /* Tailwind owns the --shadow-* namespace, so the DS publishes its elevation
-     rungs as --elev-*; pin them here and every primitive already writing
-     shadow-sm inherits DS elevation with no component edit. Mandatory since
-     0.9.0: --surface-alt now equals --surface (both --warm-0), so a card is
-     told apart from the page by its border and shadow alone. */
-  --shadow-xs: var(--elev-0);
-  --shadow-sm: var(--elev-1);
-  --shadow-md: var(--elev-2);
-  --shadow-lg: var(--elev-3);
+  /* DS 2.0.0 removes elevation: structural hairlines replace shadows. */
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
 
   --animate-pulse-skeleton: pulse-skeleton 1.5s ease-in-out infinite;
 }

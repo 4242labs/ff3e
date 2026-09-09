@@ -64,24 +64,13 @@
   --destructive: var(--red);
   --destructive-foreground: var(--warm-0);
 
-  /*
-   * NOTE: shadcn's alias name and the underlying token name are both
-   * literally `--border`. Re-declaring `--border` as
-   * `var(--border)` on the same `:root` is a direct self-reference, which
-   * CSS defines as invalid at computed-value time (the property would
-   * resolve to nothing, breaking every border in the app). ds-tokens.css
-   * already defines `--border` with exactly the intended value (incl. the
-   * `body.theme-dark` override), so no re-declaration is needed here — the
-   * alias is satisfied by omission.
-   *
-   * `--input` is the control boundary, not the card edge: WCAG 1.4.11 wants
-   * 3:1 for the visual information identifying a UI component, which `--border`
-   * does not reach. Since 0.9.0 the DS ships that as its own token.
-   */
+  /* DS 2.0.0: control edges use the darker warm-600 rung; text fields remain
+     unboxed at rest in the Swiss control layer. */
   --input: var(--border-control);
   --ring: var(--accent-focus);
 
-  --radius: var(--r-3);
+  /* DS 2.0.0: one 4px corner everywhere. */
+  --radius: var(--r-2);
 
   /* shadcn sidebar contract -> design tokens (mirrors the token layer's own
      mapping). Declared here and re-declared under body.theme-dark below for
