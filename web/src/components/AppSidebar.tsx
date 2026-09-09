@@ -50,7 +50,7 @@ export function AppSidebar({
         {/*
          * The lockup is CENTRED in the panel, not left-aligned, and links to
          * 42labs. Per the DS two-tone rule: the MARK carries the brand colour
-         * (--logo), the WORDMARK stays neutral (--fg).
+         * (--logo), the WORDMARK carries the dark panel's neutral (--logo-word).
          */}
         <a
           href="https://42labs.io"
@@ -61,7 +61,7 @@ export function AppSidebar({
         >
           <BrandMark className="h-10 w-10 shrink-0 text-[var(--logo)] group-data-[collapsible=icon]:h-6 group-data-[collapsible=icon]:w-6" />
           {/* drift-allow: FF3E wordmark cap-height geometry — the viewBox is a tight cap-height box, so the SVG's CSS height IS its 21px cap height; snapping to a spacing step would distort the lockup. */}
-          <Wordmark className="h-[21px] text-[var(--fg)] group-data-[collapsible=icon]:hidden" />
+          <Wordmark className="h-[21px] text-[var(--logo-word)] group-data-[collapsible=icon]:hidden" />
         </a>
 
         <ThemeSwitch />
@@ -143,9 +143,8 @@ export function AppSidebar({
 
         {/*
          * Buy me a coffee — the 42labs asset, flat/transparent (no background).
-         * The wordmark is theme-swapped so it stays legible: ink on the light
-         * sidebar, white on dark (identical to the 42labs header). Only the
-         * wordmark differs between the two files; the yellow cup is shared.
+         * The rail is the permanent D1 dark surface. Its wordmark is therefore
+         * always the white dark-theme asset, regardless of page theme.
          */}
         <a
           href="https://buymeacoffee.com/42piratas"
@@ -154,8 +153,7 @@ export function AppSidebar({
           aria-label="Buy me a coffee"
           className="transition-opacity hover:opacity-80"
         >
-          <img src="buymeacoffee-ink.svg" alt="Buy me a coffee" className="h-6 w-auto dark:hidden" />
-          <img src="buymeacoffee.svg" alt="Buy me a coffee" className="hidden h-6 w-auto dark:block" />
+          <img src="buymeacoffee.svg" alt="Buy me a coffee" className="h-6 w-auto" />
         </a>
       </SidebarFooter>
 

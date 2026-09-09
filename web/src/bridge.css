@@ -90,6 +90,44 @@
 }
 
 /*
+ * The sidebar is the one D1 inversion in Entropy's shell. The token artifact
+ * scopes the dark semantic layer to these elements; bridge aliases must be
+ * re-declared there too, otherwise they inherit light values already resolved
+ * at :root. That was the mixed rail: dark ground, light controls and wordmark.
+ */
+[data-slot="sidebar"],
+[data-slot="sidebar-container"],
+[data-slot="sidebar-inner"] {
+  --background: var(--surface);
+  --foreground: var(--fg);
+  --card: var(--surface-alt);
+  --card-foreground: var(--fg);
+  --popover: var(--surface-alt);
+  --popover-foreground: var(--fg);
+  --muted: var(--surface-muted);
+  --muted-foreground: var(--fg-muted);
+  --primary: var(--accent-solid);
+  --primary-foreground: var(--accent-on);
+  --secondary: var(--surface-muted);
+  --secondary-foreground: var(--fg);
+  --accent: var(--accent-soft);
+  --accent-foreground: var(--fg);
+  --destructive: var(--red);
+  --destructive-foreground: var(--warm-0);
+  --input: var(--border-control);
+  --ring: var(--accent-focus);
+  /* Flush rail: D1 ground, one 1px divider at its canvas edge. */
+  --sidebar: var(--surface);
+  --sidebar-foreground: var(--fg);
+  --sidebar-primary: var(--accent-solid);
+  --sidebar-primary-foreground: var(--accent-on);
+  --sidebar-accent: var(--accent-soft);
+  --sidebar-accent-foreground: var(--fg);
+  --sidebar-ring: var(--accent-focus);
+  --sidebar-border: var(--border);
+}
+
+/*
  * Dark-mode re-resolution (see header comment): identical right-hand sides
  * to the :root block above, just re-declared at `body.theme-dark` scope so
  * each alias picks up the dark tokens ds-tokens.css sets there
