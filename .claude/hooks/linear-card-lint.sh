@@ -1,7 +1,8 @@
 #!/bin/bash
 # tron kit — Linear card-write linter (PreToolUse hook, matcher: mcp__linear__save_issue).
 # Contract it enforces: {meta}/skills/skill-linear-cards.md (canon home:
-# tortuga/dead-mans-chest/skills/skill-linear-cards.md) + deterministic-fleet plan §1.4.
+# tortuga/dead-mans-chest/skills/skill-linear-cards.md), whose §2c is the live state
+# vocabulary. The deterministic-fleet plan recorded the original design and is history.
 #
 # Blocks a save_issue call when:
 #   - `state` is outside the agent vocabulary (all other states are operator-only),
@@ -26,7 +27,7 @@ fi
 proj="${CLAUDE_PROJECT_DIR:-.}"
 cfg="$proj/.claude/hooks/linear-lint.config.json"
 
-allowed_states='["Backlog","On the Horizon","Minions Deployed","Done","Canceled","Duplicate"]'
+allowed_states='["🤖 Minions Backlog","🤖 Minions To-Do","🤖 Minions Deployed","Done","Canceled","Duplicate"]'
 assignee_expected="ops@42labs.io"
 if [ -f "$cfg" ]; then
   s=$(jq -c '.allowed_states // empty' "$cfg" 2>/dev/null); [ -n "$s" ] && allowed_states="$s"
