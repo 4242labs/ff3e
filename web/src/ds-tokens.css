@@ -1,7 +1,7 @@
 /*
  * 42labs Design System — tokens.css (auto-generated; DO NOT EDIT).
- * Version 0.9.0 · commit 8da0b11 · source-touched 2026-08-17T16:07:38-03:00
- * Source: https://github.com/4242labs/design-system/blob/8da0b11/src/app/globals.css
+ * Version 2.0.0 · commit 70c017b · source-touched 2026-09-09T16:57:48-03:00
+ * Source: https://github.com/4242labs/design-system/blob/70c017b/src/app/globals.css
  * Contains layers 1-3 of globals.css (raw palette + semantic + scale).
  * Layer 4 (@theme inline Tailwind bridge) and layer 5 (layout primitives) are NOT included.
  */
@@ -17,8 +17,6 @@
   --orange-700: #A84500;
   --orange-800: #853700;
   --orange-900: #632900;
-  --orange-925: #5C3216;
-  --orange-950: #2A1608;
   --mint-300: #00FFA7;
   --mint-500: #09C385;
   --mint-925: #0E4A34;
@@ -27,7 +25,6 @@
   --warm-50: #FEFCF9;
   --warm-100: #F7F3EE;
   --warm-150: #F4F0EA;
-  --warm-175: #F1ECE6;
   --warm-200: #EFE9E1;
   --warm-300: #E2DAD0;
   --warm-400: #C9BEB0;
@@ -36,16 +33,19 @@
   --warm-700: #574E43;
   --warm-750: #3D362E;
   --warm-800: #2E2820;
-  --warm-820: #29231D;
   --warm-850: #241F19;
   --warm-900: #191510;
-  --warm-910: #1E1A15;
   --warm-950: #14110D;
-  --warm-975: #100D09;
-  --gray-150: #F1F1F0;
+  --sand-150: #F1F0EF;
   --ink-175: #F0F3F5;
+  --ink-200: #EEF1F3;
+  --ink-225: #ECF0F2;
+  --ink-250: #E8ECEF;
+  --ink-275: #E3E9ED;
+  --ink-300: #D1DAE1;
   --ink-400: #C3CDD6;
   --ink-500: #94A2AD;
+  --ink-550: #7993A6;
   --ink-600: #6C7C89;
   --ink-750: #33414E;
   --ink-800: #2B3540;
@@ -60,6 +60,7 @@
   --red-dark: #A72A20;
   --amber: #E0A50E;
   --amber-dark: #7A5600;
+  --amber-600: #A87B0A;
   --blue: #2E6FD6;
   --blue-dark: #1F53A8;
   --info-subtle-light: #DCEAFB;
@@ -88,30 +89,39 @@
   --font-heading: 'Space Grotesk', system-ui, sans-serif;
   --font-body: 'IBM Plex Sans', system-ui, sans-serif;
   --font-mono: 'Geist Mono', ui-monospace, monospace;
-  --r-2: 6px;
+  --r-2: 4px;
+  --r-full: 999px;
   --r-3: 8px;
   --r-4: 10px;
-  --r-full: 999px;
   --elev-0: 0 1px 2px rgb(25 21 16 / 0.05);
   --elev-1: 0 1px 3px rgb(25 21 16 / 0.06), 0 4px 8px rgb(25 21 16 / 0.04);
   --elev-2: 0 2px 6px rgb(25 21 16 / 0.07), 0 8px 24px rgb(25 21 16 / 0.06);
   --elev-3: 0 4px 12px rgb(25 21 16 / 0.08), 0 16px 48px rgb(25 21 16 / 0.10);
   --pad-card: 24px;
   --pad-x: clamp(20px, 5vw, 32px);
+  --t-2xs: 10px;
+  --t-xs: 12px;
+  --t-sm: 14px;
+  --t-base: 16px;
+  --t-lg: 18px;
+  --t-xl: 20px;
+  --t-2xl: 24px;
+  --t-3xl: 32px;
+  --t-4xl: 48px;
+  --t-5xl: 56px;
+  --t-6xl: 64px;
   --w-sm: 640px;
   --w-md: 768px;
   --w-lg: 1024px;
   --w-xl: 1100px;
-  --bp-sm: 640px;
-  --bp-md: 768px;
-  --bp-lg: 1024px;
+  --w-2xl: 1280px;
   --surface: var(--warm-0);
   --surface-alt: var(--warm-0);
   --surface-muted: var(--warm-150);
-  --surface-subtle: var(--gray-150);
+  --surface-subtle: var(--sand-150);
   --border: var(--warm-300);
   --border-subtle: var(--warm-200);
-  --border-control: var(--warm-500);
+  --border-control: var(--warm-600);
   --fg: var(--warm-900);
   --fg-2: var(--warm-700);
   --fg-muted: var(--warm-600);
@@ -128,12 +138,32 @@
   --link-hover: var(--orange-800);
   --logo: var(--orange-700);
   --logo-word: var(--ink-950);
+  --status-success: var(--emerald);
+  --status-warning: var(--amber-600);
+  --status-error: var(--red);
+  --status-info: var(--blue);
+  --status-success-bg: var(--success-subtle-light);
+  --status-success-edge: var(--success-border-light);
+  --status-success-fg: var(--emerald-dark);
+  --status-warning-bg: var(--warning-subtle-light);
+  --status-warning-edge: var(--warning-border-light);
+  --status-warning-fg: var(--amber-dark);
+  --status-error-bg: var(--error-subtle-light);
+  --status-error-edge: var(--error-border-light);
+  --status-error-fg: var(--red-dark);
+  --status-info-bg: var(--info-subtle-light);
+  --status-info-edge: var(--info-border-light);
+  --status-info-fg: var(--blue-dark);
   --inverse-fg: var(--ink-175);
   --inverse-fg-muted: var(--ink-500);
   --inverse-accent: var(--mint-300);
 }
 
-body.theme-dark {
+body.theme-dark,
+.band-dark,
+[data-slot="sidebar"],
+[data-slot="sidebar-container"],
+[data-slot="sidebar-inner"] {
   --surface: var(--ink-950);
   --surface-alt: var(--ink-910);
   --surface-muted: var(--ink-820);
@@ -160,4 +190,38 @@ body.theme-dark {
   --inverse-fg: var(--warm-900);
   --inverse-fg-muted: var(--warm-600);
   --inverse-accent: var(--orange-700);
+  --status-success: var(--emerald-light);
+  --status-warning: var(--amber-light);
+  --status-error: var(--red-light);
+  --status-info: var(--blue-light);
+  --status-success-bg: var(--success-subtle-dark);
+  --status-success-edge: var(--success-border-dark);
+  --status-success-fg: var(--emerald-light);
+  --status-warning-bg: var(--warning-subtle-dark);
+  --status-warning-edge: var(--warning-border-dark);
+  --status-warning-fg: var(--amber-light);
+  --status-error-bg: var(--error-subtle-dark);
+  --status-error-edge: var(--error-border-dark);
+  --status-error-fg: var(--red-light);
+  --status-info-bg: var(--info-subtle-dark);
+  --status-info-edge: var(--info-border-dark);
+  --status-info-fg: var(--blue-light);
+}
+
+body:not(.theme-dark) .band-dark,
+body:not(.theme-dark) [data-slot="sidebar"],
+body:not(.theme-dark) [data-slot="sidebar-container"],
+body:not(.theme-dark) [data-slot="sidebar-inner"] {
+  --accent: var(--orange-400);
+  --accent-hover: var(--orange-300);
+  --accent-solid: var(--orange-400);
+  --accent-solid-hover: var(--orange-300);
+  --accent-soft: var(--ink-910);
+  --accent-border: var(--orange-700);
+  --accent-focus: var(--orange-400);
+  --accent-on: var(--ink-950);
+  --link: var(--orange-400);
+  --link-hover: var(--orange-300);
+  --logo: var(--orange-400);
+  --logo-word: var(--warm-50);
 }
