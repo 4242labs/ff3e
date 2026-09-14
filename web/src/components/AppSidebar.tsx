@@ -84,8 +84,6 @@ export function AppSidebar({
       </SidebarContent>
 
       <SidebarFooter className="gap-4 border-t border-sidebar-border p-3 group-data-[collapsible=icon]:gap-1">
-        <ThemeSwitch />
-
         <div className="flex flex-col items-center gap-3 text-center group-data-[collapsible=icon]:hidden">
           <div className="flex items-center justify-center gap-4">
             <a
@@ -123,6 +121,8 @@ export function AppSidebar({
             <img src="buymeacoffee.svg" alt="Buy me a coffee" className="h-6 w-auto" />
           </a>
         </div>
+
+        <ThemeSwitch />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
