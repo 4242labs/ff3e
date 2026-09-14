@@ -126,7 +126,7 @@ export type DashboardMode = 'dashboard' | 'data'
 // ---------------------------------------------------------------------------
 
 /** Which page the sidebar has selected. */
-export type AppView = 'forecast' | 'reports'
+export type AppView = 'forecast' | 'charts' | 'reports'
 
 /**
  * The Reports timeframe. The three calendar granularities behave exactly as

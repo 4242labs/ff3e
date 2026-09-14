@@ -1,23 +1,10 @@
-import type { ComponentType } from 'react'
-import {
-  BarChart3,
-  CalendarClock,
-  ChevronRight,
-  Coffee,
-  ExternalLink,
-  Github,
-  Info,
-} from 'lucide-react'
+import { CalendarClock, ChevronRight, Github } from 'lucide-react'
 
 import { BrandMark } from '@/components/brand-mark'
-import { Button } from '@/components/ui/button'
-import { Wordmark } from '@/components/Wordmark'
 import { ThemeSwitch } from '@/components/ThemeSwitch'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
+import { Wordmark } from '@/components/Wordmark'
+import { Button } from '@/components/ui/button'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
   Sidebar,
   SidebarContent,
@@ -35,20 +22,10 @@ import {
 } from '@/components/ui/sidebar'
 import type { AppView } from '@/lib/types'
 
-type ViewItem = { key: AppView; label: string }
-type LinkItem = { label: string; href: string; icon?: ComponentType<{ className?: string }> }
-
-const VIEWS: ViewItem[] = [
+const VIEWS: { key: AppView; label: string }[] = [
   { key: 'forecast', label: 'Outstanding & Upcoming' },
+  { key: 'charts', label: 'Charts' },
   { key: 'reports', label: 'Reports' },
-]
-
-const PROJECT_LINKS: LinkItem[] = [
-  { label: 'Source on GitHub', href: 'https://github.com/4242labs/ff3e', icon: Github },
-  { label: 'AGPL-3.0 licence', href: 'https://github.com/4242labs/ff3e/blob/main/LICENSE', icon: Info },
-  { label: 'Built with TRON', href: 'https://tron.42labs.io/', icon: ExternalLink },
-  { label: '42labs', href: 'https://42labs.io', icon: ExternalLink },
-  { label: 'Buy me a coffee', href: 'https://buymeacoffee.com/42piratas', icon: Coffee },
 ]
 
 export function AppSidebar({
@@ -90,39 +67,10 @@ export function AppSidebar({
                     <SidebarMenuSub>
                       {VIEWS.map((item) => (
                         <SidebarMenuSubItem key={item.key}>
-                          <SidebarMenuSubButton
-                            asChild
-                            isActive={item.key === activeView}
-                          >
+                          <SidebarMenuSubButton asChild isActive={item.key === activeView}>
                             <Button type="button" variant="ghost" onClick={() => onNavigate?.(item.key)}>
                               <span>{item.label}</span>
                             </Button>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </SidebarMenuItem>
-              </Collapsible>
-
-              <Collapsible asChild className="group/collapsible">
-                <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton tooltip="Project">
-                      <BarChart3 />
-                      <span className="lbl">Project</span>
-                      <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                    </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      {PROJECT_LINKS.map((item) => (
-                        <SidebarMenuSubItem key={item.href}>
-                          <SidebarMenuSubButton asChild>
-                            <a href={item.href} target="_blank" rel="noopener noreferrer">
-                              <span>{item.label}</span>
-                              <ExternalLink className="ml-auto" aria-hidden="true" />
-                            </a>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                       ))}
@@ -135,8 +83,46 @@ export function AppSidebar({
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-3">
+      <SidebarFooter className="gap-4 border-t border-sidebar-border p-3 group-data-[collapsible=icon]:gap-1">
         <ThemeSwitch />
+
+        <div className="flex flex-col items-center gap-3 text-center group-data-[collapsible=icon]:hidden">
+          <div className="flex items-center justify-center gap-4">
+            <a
+              href="https://github.com/4242labs/ff3e/blob/main/LICENSE"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="AGPL-3.0 licence"
+              className="rounded-sm text-fg-muted transition-colors hover:text-fg focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+            >
+              <img src="opensource.svg" alt="" className="size-6" />
+            </a>
+            <a
+              href="https://github.com/4242labs/ff3e"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Source on GitHub"
+              className="rounded-sm text-fg-muted transition-colors hover:text-fg focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+            >
+              <Github className="size-6" aria-hidden="true" />
+            </a>
+          </div>
+
+          <p className="text-xs font-light uppercase tracking-mono text-fg-muted">
+            <a className="hover:text-fg" href="https://tron.42labs.io/" target="_blank" rel="noopener noreferrer">Built with TRON</a>
+            <span aria-hidden="true"> · </span>
+            <a className="hover:text-fg" href="https://42labs.io" target="_blank" rel="noopener noreferrer">42labs</a>
+          </p>
+
+          <a
+            href="https://buymeacoffee.com/42piratas"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-sm opacity-80 transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+          >
+            <img src="buymeacoffee.svg" alt="Buy me a coffee" className="h-6 w-auto" />
+          </a>
+        </div>
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

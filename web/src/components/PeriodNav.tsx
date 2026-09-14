@@ -1,4 +1,4 @@
-import { AlertTriangle, ChevronLeft, ChevronRight, LayoutDashboard, RefreshCw, Table2 } from 'lucide-react'
+import { AlertTriangle, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
 
 import { FacetedFilter } from '@/components/FacetedFilter'
 import { FilterBar } from '@/components/FilterBar'
@@ -10,15 +10,9 @@ import type { FilterOptions } from '@/lib/filters'
 import {
   isCumulativeMode,
   type ActiveFilters,
-  type DashboardMode,
   type Granularity,
   type ViewMode,
 } from '@/lib/types'
-
-const DASHBOARD_MODE_OPTIONS = [
-  { value: 'dashboard' as const, label: 'Dashboard', icon: LayoutDashboard },
-  { value: 'data' as const, label: 'Data', icon: Table2 },
-]
 
 const VIEW_OPTIONS = [
   { value: 'day', label: 'Day' },
@@ -44,10 +38,8 @@ export interface PeriodNavProps {
   filterOptions: FilterOptions | null
   filters: ActiveFilters
   onFiltersChange: (filters: ActiveFilters) => void
-  dashboardMode: DashboardMode
-  onDashboardModeChange: (mode: DashboardMode) => void
-  groupAccounts: string[]
-  onGroupAccountsChange: (accounts: string[]) => void
+  groupAccounts?: string[]
+  onGroupAccountsChange?: (accounts: string[]) => void
 }
 
 export function PeriodNav(props: PeriodNavProps) {
@@ -107,23 +99,6 @@ export function PeriodNav(props: PeriodNavProps) {
             Review <span className="count">{props.needsReviewCount}</span>
           </span>
         ) : null}
-
-        <div className="seg" role="radiogroup" aria-label="Display">
-          {DASHBOARD_MODE_OPTIONS.map(({ value, label, icon: Icon }) => (
-            <Button
-              key={value}
-              type="button"
-              variant="ghost"
-              role="radio"
-              aria-checked={props.dashboardMode === value}
-              onClick={() => props.onDashboardModeChange(value)}
-              title={label}
-            >
-              <Icon aria-hidden="true" />
-              <span className="sr-only">{label}</span>
-            </Button>
-          ))}
-        </div>
 
         <Button
           className="btn btn-icon"

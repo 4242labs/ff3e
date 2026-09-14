@@ -3,7 +3,7 @@ import { chromium } from 'playwright'
 
 const baseURL = process.env.PREVIEW_URL || 'http://127.0.0.1:4173'
 const themes = ['light', 'dark']
-const views = ['Outstanding & Upcoming', 'Reports']
+const views = ['Outstanding & Upcoming', 'Charts', 'Reports']
 const failures = []
 let checks = 0
 
