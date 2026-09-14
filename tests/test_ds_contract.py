@@ -12,9 +12,9 @@ ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "web"
 SRC = WEB / "src"
 UI = SRC / "components" / "ui"
-DS_RELEASE = "2.4.2"
-DS_COMMIT = "71ce3b4e1c7dab88a4e8131b2832f77e234b8c84"
-DS_SOURCE_COMMIT = "ce69ca2"
+DS_RELEASE = "2.4.3"
+DS_COMMIT = "df92a5786b3a61f3c4295b052f05a7e8a0b91f44"
+DS_SOURCE_COMMIT = "d4f6f4c"
 
 RAW_CONTROL = re.compile(r"<(button|input|select|textarea)(?:\s|>|/)")
 ARBITRARY_VALUE = re.compile(r"\b[a-z][a-z-]*-\[[^\]]+\]")
@@ -191,8 +191,8 @@ def test_local_candidate_adopted_sources_are_byte_identical() -> None:
         pytest.skip("set DS_CANDIDATE to byte-check the local design-system candidate")
     ds_src = Path(candidate) / "src"
     pairs = [(UI / name, ds_src / "components" / "ui" / name) for name in ADOPTED_UI]
-    pairs.append((SRC / "ds-tokens.css", Path(candidate) / "public" / "tokens.v2.4.2.css"))
-    pairs.append((SRC / "ds-tailwind.css", Path(candidate) / "public" / "tailwind.v2.4.2.css"))
+    pairs.append((SRC / "ds-tokens.css", Path(candidate) / "public" / "tokens.v2.4.3.css"))
+    pairs.append((SRC / "ds-tailwind.css", Path(candidate) / "public" / "tailwind.v2.4.3.css"))
     pairs.append((SRC / "components" / "brand-mark.tsx", ds_src / "components" / "brand-mark.tsx"))
     mismatches = [
         str(local.relative_to(ROOT))

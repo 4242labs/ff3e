@@ -1,7 +1,7 @@
 /*
  * 42labs Design System — Tailwind consumer bridge (auto-generated; DO NOT EDIT).
- * Version 2.4.2 · commit ce69ca2 · source-touched 2026-09-14T12:29:20-03:00
- * Source: https://github.com/4242labs/design-system/blob/ce69ca2/src/app/globals.css
+ * Version 2.4.3 · commit d4f6f4c · source-touched 2026-09-14T12:53:07-03:00
+ * Source: https://github.com/4242labs/design-system/blob/d4f6f4c/src/app/globals.css
  * Import after tokens.v<version>.css in a Tailwind v4 consumer stylesheet.
  * Carries mappings/setup intentionally omitted from the framework-neutral token artifact.
  */
@@ -542,8 +542,8 @@ body {
   .sec-head { flex-wrap: wrap; row-gap: calc(var(--spacing) * 2); }
 }
 .app-footer {
-  width: 100%; max-width: var(--w-xl);
-  margin-block-start: auto; margin-inline: auto;
+  width: 100%;
+  margin-block-start: auto;
   padding-inline: var(--pad-x);
 }
 .app-footer > * {
