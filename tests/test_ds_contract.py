@@ -12,8 +12,9 @@ ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "web"
 SRC = WEB / "src"
 UI = SRC / "components" / "ui"
-DS_RELEASE = "2.4.1"
-DS_COMMIT = "b3435a210e8bb7709f93a88ddaaea2d658c9b19c"
+DS_RELEASE = "2.4.2"
+DS_COMMIT = "71ce3b4e1c7dab88a4e8131b2832f77e234b8c84"
+DS_SOURCE_COMMIT = "ce69ca2"
 
 RAW_CONTROL = re.compile(r"<(button|input|select|textarea)(?:\s|>|/)")
 ARBITRARY_VALUE = re.compile(r"\b[a-z][a-z-]*-\[[^\]]+\]")
@@ -177,11 +178,11 @@ def test_ci_pins_exact_ds_release_and_runs_provenance_and_browser_gates() -> Non
 def test_vendored_token_artifact_has_final_release_provenance() -> None:
     tokens = (SRC / "ds-tokens.css").read_text()
     assert f"Version {DS_RELEASE}" in tokens
-    assert "commit 38a1f53" in tokens
-    assert "/blob/38a1f53/src/app/globals.css" in tokens
+    assert f"commit {DS_SOURCE_COMMIT}" in tokens
+    assert f"/blob/{DS_SOURCE_COMMIT}/src/app/globals.css" in tokens
     bridge = (SRC / "ds-tailwind.css").read_text()
     assert f"Version {DS_RELEASE}" in bridge
-    assert "commit 38a1f53" in bridge
+    assert f"commit {DS_SOURCE_COMMIT}" in bridge
 
 
 def test_local_candidate_adopted_sources_are_byte_identical() -> None:
@@ -190,8 +191,8 @@ def test_local_candidate_adopted_sources_are_byte_identical() -> None:
         pytest.skip("set DS_CANDIDATE to byte-check the local design-system candidate")
     ds_src = Path(candidate) / "src"
     pairs = [(UI / name, ds_src / "components" / "ui" / name) for name in ADOPTED_UI]
-    pairs.append((SRC / "ds-tokens.css", Path(candidate) / "public" / "tokens.v2.4.1.css"))
-    pairs.append((SRC / "ds-tailwind.css", Path(candidate) / "public" / "tailwind.v2.4.1.css"))
+    pairs.append((SRC / "ds-tokens.css", Path(candidate) / "public" / "tokens.v2.4.2.css"))
+    pairs.append((SRC / "ds-tailwind.css", Path(candidate) / "public" / "tailwind.v2.4.2.css"))
     pairs.append((SRC / "components" / "brand-mark.tsx", ds_src / "components" / "brand-mark.tsx"))
     mismatches = [
         str(local.relative_to(ROOT))

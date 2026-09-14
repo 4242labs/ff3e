@@ -1,7 +1,7 @@
 /*
  * 42labs Design System — Tailwind consumer bridge (auto-generated; DO NOT EDIT).
- * Version 2.4.1 · commit 38a1f53 · source-touched 2026-09-13T17:04:15-03:00
- * Source: https://github.com/4242labs/design-system/blob/38a1f53/src/app/globals.css
+ * Version 2.4.2 · commit ce69ca2 · source-touched 2026-09-14T12:29:20-03:00
+ * Source: https://github.com/4242labs/design-system/blob/ce69ca2/src/app/globals.css
  * Import after tokens.v<version>.css in a Tailwind v4 consumer stylesheet.
  * Carries mappings/setup intentionally omitted from the framework-neutral token artifact.
  */
@@ -354,10 +354,6 @@ body {
 }
 .barbtn:disabled:hover { background: transparent; }
 .barbtn svg { width: 13px; height: 13px; flex: none; }
-.barbtn .value {
-  font-family: var(--font-body); font-weight: 400; font-size: var(--t-sm);
-  letter-spacing: normal; text-transform: none; color: var(--fg);
-}
 .barbtn::before {
   content: ""; position: absolute; inset: 50% 0 auto; translate: 0 -50%;
   height: 44px; min-height: 100%;
