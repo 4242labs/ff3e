@@ -28,7 +28,7 @@ export function Calendar({ className, classNames, showOutsideDays = true, ...pro
         ),
         month_grid: 'w-full border-collapse',
         weekdays: 'flex',
-        weekday: 'w-8 text-[0.8rem] font-normal text-muted-foreground',
+        weekday: 'w-8 text-xs font-normal text-muted-foreground',
         week: 'mt-1 flex w-full',
         day: 'relative size-8 p-0 text-center text-sm',
         day_button: cn(

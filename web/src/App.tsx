@@ -42,7 +42,12 @@ export default function App() {
   return (
     <SidebarProvider>
       <AppSidebar activeView={view} onNavigate={changeView} />
-      <SidebarInset>{view === 'reports' ? <ReportsPage /> : <ForecastPage />}</SidebarInset>
+      <SidebarInset>
+        <h1 className="sr-only">
+          {view === 'reports' ? 'Entropy reports' : 'Entropy outstanding and upcoming forecast'}
+        </h1>
+        {view === 'reports' ? <ReportsPage /> : <ForecastPage />}
+      </SidebarInset>
     </SidebarProvider>
   )
 }

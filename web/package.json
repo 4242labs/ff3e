@@ -5,14 +5,18 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src scripts --max-warnings=0",
+    "test:browser:a11y": "node scripts/test-browser-a11y.mjs",
     "build": "tsc --noEmit && vite build",
+    "build:alfred": "VITE_BASE=/entropy/ VITE_API_BASE=/projections/data VITE_TX_API_BASE=/projections/transactions VITE_AUTH_RELOAD=1 npm run build",
     "build:demo": "tsc --noEmit && vite build --mode demo",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@fontsource/geist-mono": "^5.2.8",
-    "@fontsource/ibm-plex-sans": "^5.2.8",
-    "@fontsource/space-grotesk": "^5.2.10",
+    "@fontsource-variable/geist-mono": "5.3.0",
+    "@fontsource-variable/ibm-plex-sans": "5.3.0",
+    "@fontsource-variable/space-grotesk": "5.3.0",
     "@radix-ui/react-dialog": "^1.1.6",
     "@radix-ui/react-popover": "^1.1.19",
     "@radix-ui/react-select": "^2.1.6",
@@ -26,20 +30,28 @@
     "date-fns": "^4.4.0",
     "lucide-react": "^0.469.0",
     "radix-ui": "^1.6.7",
-    "react": "^18.3.1",
+    "react": "^19.2.4",
     "react-day-picker": "^10.0.1",
-    "react-dom": "^18.3.1",
+    "react-dom": "^19.2.4",
     "recharts": "^2.15.0",
-    "tailwind-merge": "^2.6.0"
+    "tailwind-merge": "^2.6.0",
+    "tw-animate-css": "1.4.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@eslint/js": "^9.39.5",
     "@tailwindcss/vite": "^4.1.0",
     "@types/node": "^26.1.1",
-    "@types/react": "^18.3.18",
-    "@types/react-dom": "^18.3.5",
-    "@vitejs/plugin-react": "^4.3.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^16.5.0",
+    "playwright": "^1.63.0",
     "tailwindcss": "^4.1.0",
     "typescript": "^5.7.3",
-    "vite": "^5.4.11"
+    "typescript-eslint": "^8.70.0",
+    "vite": "^8.3.0"
   }
 }

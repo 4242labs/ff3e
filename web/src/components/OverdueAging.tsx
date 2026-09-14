@@ -32,29 +32,29 @@ interface Row {
 function OverdueAgingChart({ data, height }: { data: Row[]; height: number | string }) {
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 8 }}>
+      <BarChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 8 }} role="img" aria-label={`Needs review aging: ${data.map((row) => `${row.name}, ${row.count}`).join('; ')}`}>
         <CartesianGrid vertical={false} stroke="var(--border)" />
         <XAxis
           dataKey="name"
-          tick={{ fontSize: 11, fill: 'var(--fg-muted)' }}
+          tick={{ fontSize: 'var(--t-xs)', fontFamily: 'var(--font-mono)', fill: 'var(--fg-muted)' }}
           axisLine={{ stroke: 'var(--border)' }}
           tickLine={false}
         />
         <YAxis
           allowDecimals={false}
-          tick={{ fontSize: 11, fill: 'var(--fg-muted)' }}
+          tick={{ fontSize: 'var(--t-xs)', fontFamily: 'var(--font-mono)', fill: 'var(--fg-muted)' }}
           axisLine={false}
           tickLine={false}
           width={28}
         />
         <Tooltip
-          cursor={{ fill: 'var(--muted)', opacity: 0.4 }}
+          cursor={{ fill: 'var(--surface-muted)', opacity: 0.4 }}
           formatter={(value: number) => [`${value}`, 'Needs review']}
           contentStyle={{
-            background: 'var(--popover)',
+            background: 'var(--surface-alt)',
             border: '1px solid var(--border)',
-            borderRadius: 'var(--radius)',
-            color: 'var(--popover-foreground)',
+            borderRadius: 'var(--r-2)',
+            color: 'var(--fg)',
           }}
         />
         <Bar dataKey="count" fill={STATUS_COLOR.needs_review} radius={3} isAnimationActive={false} />

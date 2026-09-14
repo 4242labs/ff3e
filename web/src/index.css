@@ -1,127 +1,50 @@
 @import "tailwindcss";
+@import "./ds-tokens.css";
+@import "./ds-tailwind.css";
 
-/*
- * Tailwind v4 CSS-first config — there is no tailwind.config.js or
- * postcss.config.js. Colours/fonts/radii are declared here as `@theme
- * inline` so utilities (bg-background, text-fg-muted, rounded-lg, …) resolve
- * to the shadcn<->token bridge vars at RUNTIME — which is what lets the whole
- * palette flip on `body.theme-dark` without a rebuild. The bridge var
- * definitions themselves live in bridge.css (imported before this file);
- * the raw + semantic tokens in ds-tokens.css (imported first).
- */
-
-/* The dark theme toggles `body.theme-dark`, not `.dark` — point the shadcn
-   `dark:` variant at it so vendored primitives (input, etc.) resolve. */
-@custom-variant dark (&:is(body.theme-dark, body.theme-dark *));
-
-@theme inline {
-  /* DS semantic names, exposed as utilities under their own token names. The
-     registry primitives are written against these (the vendored sidebar paints
-     `bg-surface`), so they must resolve or those components render unpainted. */
-  --color-surface: var(--surface);
-  --color-surface-alt: var(--surface-alt);
-  --color-surface-muted: var(--surface-muted);
-  --color-surface-subtle: var(--surface-subtle);
-  --color-border-subtle: var(--border-subtle);
-  --color-border-control: var(--border-control);
-  --color-fg: var(--fg);
-  --color-fg-2: var(--fg-2);
-  --color-fg-muted: var(--fg-muted);
-  --color-fg-disabled: var(--fg-disabled);
-  --color-accent-solid: var(--accent-solid);
-  --color-accent-soft: var(--accent-soft);
-  --color-accent-border: var(--accent-border);
-  --color-accent-on: var(--accent-on);
-  --color-logo: var(--logo);
-  --color-logo-word: var(--logo-word);
-  --color-link: var(--link);
-  --color-link-hover: var(--link-hover);
-
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-
-  /* shadcn sidebar contract -> design tokens (see bridge.css). */
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
-
-  --font-body: var(--font-body);
-  --font-heading: var(--font-heading);
-  --font-mono: var(--font-mono);
-
-  /* One 4px corner in DS 2.0.0. */
-  --radius-xs: var(--r-2);
-  --radius-sm: var(--r-2);
-  --radius-md: var(--r-2);
-  --radius-lg: var(--r-2);
-  --radius-xl: var(--r-2);
-  --radius-full: var(--r-full);
-
-  /* DS 2.0.0 removes elevation: structural hairlines replace shadows. */
-  --shadow-xs: none;
-  --shadow-sm: none;
-  --shadow-md: none;
-  --shadow-lg: none;
-
-  --animate-pulse-skeleton: pulse-skeleton 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse-skeleton {
-  0%,
-  100% {
-    opacity: 1;
+@layer components {
+  [data-slot="top-bar-inner"] {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
   }
-  50% {
-    opacity: 0.5;
+
+  [data-slot="top-bar-inner"]::-webkit-scrollbar {
+    display: none;
+  }
+
+  [data-slot="top-bar-inner"] > * {
+    flex: none;
+  }
+
+  [data-slot="table-container"]:focus-visible {
+    outline: 2px solid var(--accent-focus);
+    outline-offset: 2px;
+  }
+
+  [data-slot="table-head"] {
+    font-family: var(--font-mono);
+    font-size: var(--t-xs);
+    font-weight: 500;
+    letter-spacing: var(--tk-label);
+    text-transform: uppercase;
+    color: var(--fg-muted);
+  }
+
+  .recharts-wrapper text,
+  .recharts-default-legend {
+    font-family: var(--font-mono);
+    font-size: var(--t-xs);
   }
 }
 
-@layer base {
-  /* shadcn primitives use bare `border` (width only) and expect the theme to
-     supply the colour — do it once here. Explicit border-<color> still wins. */
-  * {
-    border-color: var(--border);
-  }
-  body {
-    background-color: var(--background);
-    color: var(--foreground);
-    font-family: var(--font-body);
-    font-feature-settings: 'rlig' 1, 'calt' 1;
-  }
-  h1,
-  h2,
-  h3,
-  h4 {
-    font-family: var(--font-heading);
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

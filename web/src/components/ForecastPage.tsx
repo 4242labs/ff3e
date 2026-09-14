@@ -145,7 +145,7 @@ export function ForecastPage() {
         onGroupAccountsChange={setGroupAccounts}
       />
 
-      <main className="w-full max-w-7xl px-4 py-4 sm:px-6">
+      <div className="w-full max-w-(--w-2xl) px-(--pad-x) py-6">
           {loading && !data && <LoadingSkeleton />}
           {error && !data && <ErrorState message={error} onRetry={refetch} />}
 
@@ -154,13 +154,15 @@ export function ForecastPage() {
               each chart's local currency/group-by selection. */}
           {data && filtered && (
             <div className={loading ? 'opacity-60 transition-opacity' : undefined}>
-              {error && (
-                <p className="mb-4 text-sm" style={{ color: 'var(--red)' }}>
-                  Refresh failed ({error}) — showing the last successful load.
-                </p>
-              )}
+              {error ? (
+                <ErrorState
+                  title="Refresh failed"
+                  message={`${error} — showing the last successful load.`}
+                  onRetry={refetch}
+                />
+              ) : null}
 
-              <div className="space-y-4">
+              <div className="flex flex-col gap-6">
                 {filtered.meta.item_count === 0 ? (
                   <EmptyState message={emptyMessage} />
                 ) : (
@@ -180,7 +182,9 @@ export function ForecastPage() {
                             currency-sensitive chart renders one instance per
                             currency in `availableCurrencies`, so selecting
                             two currencies up top shows two of each chart. */}
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                        <section className="flex flex-col gap-4" aria-labelledby="forecast-charts-heading">
+                          <div className="sec-head"><h2 id="forecast-charts-heading">Forecast analysis</h2></div>
+                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                           {availableCurrencies.map((cur) => (
                             <PeriodBar
                               key={`iof-${cur}`}
@@ -225,7 +229,8 @@ export function ForecastPage() {
                               showCurrencyInTitle={availableCurrencies.length > 1}
                             />
                           ))}
-                        </div>
+                          </div>
+                        </section>
                       </>
                     ) : (
                       <PeriodTable periods={sortedFilteredPeriods} groupAccounts={groupAccounts} />
@@ -235,7 +240,7 @@ export function ForecastPage() {
               </div>
             </div>
           )}
-      </main>
+      </div>
     </>
   )
 }

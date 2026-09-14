@@ -59,7 +59,8 @@ export function PeriodTable({ periods, groupAccounts = [] }: PeriodTableProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <section className="flex flex-col gap-6" aria-labelledby="forecast-data-heading">
+      <div className="sec-head"><h2 id="forecast-data-heading">Forecast data</h2></div>
       {periods.map((period) => {
         const subtotals =
           groupAccounts.length > 0 ? groupItemsByAccount(period.items, groupAccounts) : []
@@ -71,11 +72,11 @@ export function PeriodTable({ periods, groupAccounts = [] }: PeriodTableProps) {
         return (
           <Card key={period.key}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">{period.label}</CardTitle>
+              <CardTitle className="lbl lbl-fg">{period.label}</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="flex flex-col gap-4">
               {subtotals.length > 0 && (
-                <Table>
+                <Table containerLabel={`${period.label} grouped accounts`}>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Account</TableHead>
@@ -106,7 +107,7 @@ export function PeriodTable({ periods, groupAccounts = [] }: PeriodTableProps) {
               )}
 
               {remainder.length > 0 && (
-                <Table>
+                <Table containerLabel={`${period.label} obligations`}>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Date</TableHead>
@@ -133,7 +134,7 @@ export function PeriodTable({ periods, groupAccounts = [] }: PeriodTableProps) {
                               </span>
                               {installment && (
                                 <span
-                                  className="shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono text-xs tabular-nums text-muted-foreground"
+                                  className="count shrink-0"
                                   title={`Installment ${installment}`}
                                 >
                                   {installment}
@@ -169,6 +170,6 @@ export function PeriodTable({ periods, groupAccounts = [] }: PeriodTableProps) {
           </Card>
         )
       })}
-    </div>
+    </section>
   )
 }

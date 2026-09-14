@@ -28,7 +28,7 @@ a good outcome, not a betrayal — this is a real answer, not a brush-off.
 
 ```bash
 # server (Python)
-python3 -m pip install -r server/requirements.txt
+python3 -m pip install -r server/requirements-dev.txt
 python3 -m pytest tests/
 
 # web (TypeScript)

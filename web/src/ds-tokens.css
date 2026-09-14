@@ -1,7 +1,7 @@
 /*
  * 42labs Design System — tokens.css (auto-generated; DO NOT EDIT).
- * Version 2.0.0 · commit 70c017b · source-touched 2026-09-09T16:57:48-03:00
- * Source: https://github.com/4242labs/design-system/blob/70c017b/src/app/globals.css
+ * Version 2.4.1 · commit 38a1f53 · source-touched 2026-09-13T17:04:15-03:00
+ * Source: https://github.com/4242labs/design-system/blob/38a1f53/src/app/globals.css
  * Contains layers 1-3 of globals.css (raw palette + semantic + scale).
  * Layer 4 (@theme inline Tailwind bridge) and layer 5 (layout primitives) are NOT included.
  */
@@ -86,9 +86,12 @@
   --error-border-dark: #5A241E;
   --warning-subtle-dark: #2E2408;
   --warning-border-dark: #4A3A12;
-  --font-heading: 'Space Grotesk', system-ui, sans-serif;
-  --font-body: 'IBM Plex Sans', system-ui, sans-serif;
-  --font-mono: 'Geist Mono', ui-monospace, monospace;
+  --ds-font-heading: 'Space Grotesk Variable', system-ui, sans-serif;
+  --ds-font-body: 'IBM Plex Sans Variable', system-ui, sans-serif;
+  --ds-font-mono: 'Geist Mono Variable', ui-monospace, monospace;
+  --font-heading: var(--ds-font-heading);
+  --font-body: var(--ds-font-body);
+  --font-mono: var(--ds-font-mono);
   --r-2: 4px;
   --r-full: 999px;
   --r-3: 8px;
@@ -110,11 +113,20 @@
   --t-4xl: 48px;
   --t-5xl: 56px;
   --t-6xl: 64px;
+  --tk-tighter: -0.02em;
+  --tk-tight: -0.01em;
+  --tk-mono: 0.02em;
+  --tk-label: 0.06em;
+  --tk-wide: 0.14em;
   --w-sm: 640px;
   --w-md: 768px;
   --w-lg: 1024px;
   --w-xl: 1100px;
   --w-2xl: 1280px;
+  --h-bar-compact: 56px;
+  --h-bar-swiss: 76px;
+  --h-rail-logo: 40px;
+  --bp-shell: 1100px;
   --surface: var(--warm-0);
   --surface-alt: var(--warm-0);
   --surface-muted: var(--warm-150);
@@ -132,7 +144,7 @@
   --accent-solid-hover: var(--orange-800);
   --accent-soft: var(--orange-50);
   --accent-border: var(--orange-200);
-  --accent-focus: var(--orange-400);
+  --accent-focus: var(--orange-500);
   --accent-on: var(--warm-0);
   --link: var(--orange-700);
   --link-hover: var(--orange-800);
@@ -206,22 +218,4 @@ body.theme-dark,
   --status-info-bg: var(--info-subtle-dark);
   --status-info-edge: var(--info-border-dark);
   --status-info-fg: var(--blue-light);
-}
-
-body:not(.theme-dark) .band-dark,
-body:not(.theme-dark) [data-slot="sidebar"],
-body:not(.theme-dark) [data-slot="sidebar-container"],
-body:not(.theme-dark) [data-slot="sidebar-inner"] {
-  --accent: var(--orange-400);
-  --accent-hover: var(--orange-300);
-  --accent-solid: var(--orange-400);
-  --accent-solid-hover: var(--orange-300);
-  --accent-soft: var(--ink-910);
-  --accent-border: var(--orange-700);
-  --accent-focus: var(--orange-400);
-  --accent-on: var(--ink-950);
-  --link: var(--orange-400);
-  --link-hover: var(--orange-300);
-  --logo: var(--orange-400);
-  --logo-word: var(--warm-50);
 }

@@ -23,14 +23,22 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - name: Install deps (the Gate-3 primitive diff resolves through shadcn)
         run: npm ci
+
+      - name: Install provenance gate dependency
+        working-directory: .
+        run: python -m pip install pytest
 
       - name: Fetch the design-system check (it lives in the private DS repo)
         uses: actions/checkout@v4
         with:
           repository: 4242labs/design-system
-          ref: 70539735608c92927f7ede216f4ca79ba607fee2 # DS 2.0 compliance action
+          ref: b3435a210e8bb7709f93a88ddaaea2d658c9b19c # immutable DS 2.4.1 artifact commit
           token: ${{ secrets.DS_ACTION_TOKEN }} # org secret: a Contents:read PAT
           path: web/.ds-action
 
@@ -40,7 +48,24 @@ jobs:
       - name: DS compliance — tokens, primitives, own-code drift
         run: node .ds-action/.github/actions/ds-compliance/consumer-check.mjs
         env:
-          DS_TOKENS_PIN: "2.0.0"
+          DS_TOKENS_PIN: "2.4.1"
+          DS_EXPECTED_COMMIT: "b3435a210e8bb7709f93a88ddaaea2d658c9b19c"
           DS_TOKENS_FILE: "src/ds-tokens.css"
           DS_UI_DIR: "src/components/ui"
           DS_SCAN: "src"
+
+      - name: Exact component and artifact provenance contract
+        working-directory: .
+        run: DS_CANDIDATE="$PWD/web/.ds-action" python -m pytest -q tests/test_ds_contract.py
+
+      - name: Install browser for accessibility gate
+        run: npx playwright install --with-deps chromium
+
+      - name: Build browser candidate
+        run: npm run build:demo
+
+      - name: Start browser candidate
+        run: npm run preview -- --host 127.0.0.1 --port 4173 &
+
+      - name: Browser accessibility and overflow gate
+        run: npm run test:browser:a11y

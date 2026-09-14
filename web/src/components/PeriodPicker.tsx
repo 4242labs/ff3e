@@ -5,19 +5,12 @@ import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { anchorToDate, toISO } from '@/lib/range'
-import { cn } from '@/lib/utils'
 import type { Granularity } from '@/lib/types'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 /** Trigger width per granularity — fixed so the field never resizes as you
  * page. Month uses the 3-letter form, so every month is the same width. */
-const TRIGGER_WIDTH: Record<Granularity, string> = {
-  day: 'w-34',
-  month: 'w-24',
-  year: 'w-18',
-}
-
 export interface PeriodPickerProps {
   granularity: Granularity
   anchor: string
@@ -61,17 +54,15 @@ export function PeriodPicker({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          className="barbtn"
           title={isCurrent ? 'Current period' : 'Jump to another period'}
-          className={cn(
-            'rounded-md px-2 py-1 text-center text-sm font-medium tabular-nums transition-colors hover:bg-accent hover:text-accent-foreground',
-            TRIGGER_WIDTH[granularity],
-            isCurrent ? 'text-foreground' : 'text-muted-foreground',
-          )}
+          aria-expanded={open}
         >
-          {label}
-        </button>
+          <span className="value num">{label}</span>
+        </Button>
       </PopoverTrigger>
 
       <PopoverContent className="w-auto p-0" align="center">
@@ -162,12 +153,12 @@ function GridNav({
 }) {
   return (
     <div className="flex items-center justify-between">
-      <Button variant="outline" size="icon" className="size-7" onClick={onPrev} aria-label="Previous">
-        <ChevronLeft className="size-4" />
+      <Button className="btn btn-icon" variant="ghost" size="icon-sm" onClick={onPrev} aria-label="Previous">
+        <ChevronLeft />
       </Button>
-      <span className="text-sm font-medium tabular-nums">{label}</span>
-      <Button variant="outline" size="icon" className="size-7" onClick={onNext} aria-label="Next">
-        <ChevronRight className="size-4" />
+      <span className="lbl lbl-fg num">{label}</span>
+      <Button className="btn btn-icon" variant="ghost" size="icon-sm" onClick={onNext} aria-label="Next">
+        <ChevronRight />
       </Button>
     </div>
   )

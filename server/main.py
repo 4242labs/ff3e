@@ -43,11 +43,7 @@ def _parse_date(s: Optional[str]) -> Optional[dt.date]:
 
 @app.get("/healthz")
 def healthz() -> dict:
-    return {
-        "ok": True,
-        "firefly_iii_url": forecast.FIREFLY_III_URL or None,
-        "token_configured": bool(forecast.FIREFLY_III_TOKEN),
-    }
+    return {"ok": True}
 
 
 @app.get("/api/forecast")
@@ -71,7 +67,7 @@ def api_forecast(granularity: str = "month",
         raise HTTPException(status_code=503, detail=str(e))
     except Exception as e:
         log.exception("forecast failed")
-        raise HTTPException(status_code=502, detail=f"Firefly III request failed: {e}")
+        raise HTTPException(status_code=502, detail="Firefly III request failed")
 
 
 @app.get("/api/transactions")
@@ -96,7 +92,7 @@ def api_transactions(start: str, end: str):
         raise HTTPException(status_code=503, detail=str(exc))
     except Exception as exc:
         log.exception("transactions failed")
-        raise HTTPException(status_code=502, detail=f"Firefly III request failed: {exc}")
+        raise HTTPException(status_code=502, detail="Firefly III request failed")
 
 
 # The SPA, if it has been built. `html=True` serves index.html at the mount

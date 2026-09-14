@@ -153,6 +153,11 @@ async function loadFixture(granularity: Granularity, demo: boolean): Promise<Pro
 // too — it is a second route, not a query parameter on the first.
 const TX_ENDPOINT = import.meta.env.VITE_TX_API_BASE || 'api/transactions'
 
+export const DEMO_TRANSACTION_RANGE = {
+  start: '2026-05-01',
+  end: '2026-07-31',
+} as const
+
 export interface FetchTransactionsParams {
   start: string // ISO date
   end: string // ISO date
