@@ -48,7 +48,7 @@ export function PeriodNav(props: PeriodNavProps) {
   return (
     <TopBar variant="compact" lane="2xl">
       <TopBarRailLead>
-        <SidebarTrigger />
+        <SidebarTrigger onClick={(event) => event.currentTarget.blur()} />
       </TopBarRailLead>
 
       <FacetedFilter

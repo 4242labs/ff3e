@@ -91,7 +91,7 @@ try {
   const mobileContext = await browser.newContext({ viewport: { width: 390, height: 844 } })
   const mobilePage = await mobileContext.newPage()
   mobilePage.on('console', (message) => {
-    if (message.type() === 'warning' && message.text().includes('Blocked aria-hidden')) {
+    if (['warning', 'warn'].includes(message.type()) && message.text().includes('Blocked aria-hidden')) {
       fail('mobile navigation', message.text())
     }
   })
