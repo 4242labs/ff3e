@@ -19,6 +19,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarRail,
+  useSidebar,
 } from '@/components/ui/sidebar'
 import type { AppView } from '@/lib/types'
 
@@ -35,6 +36,13 @@ export function AppSidebar({
   activeView?: AppView
   onNavigate?: (view: AppView) => void
 }) {
+  const { isMobile, setOpenMobile } = useSidebar()
+
+  const navigate = (view: AppView) => {
+    onNavigate?.(view)
+    if (isMobile) setOpenMobile(false)
+  }
+
   return (
     <Sidebar collapsible="icon" className="band-dark">
       <SidebarHeader className="items-center px-3 pt-8 pb-6 group-data-[collapsible=icon]:px-0! group-data-[collapsible=icon]:pt-8! group-data-[collapsible=icon]:pb-6!">
@@ -68,7 +76,7 @@ export function AppSidebar({
                       {VIEWS.map((item) => (
                         <SidebarMenuSubItem key={item.key}>
                           <SidebarMenuSubButton asChild isActive={item.key === activeView}>
-                            <Button type="button" variant="ghost" onClick={() => onNavigate?.(item.key)}>
+                            <Button type="button" variant="ghost" onClick={() => navigate(item.key)}>
                               <span>{item.label}</span>
                             </Button>
                           </SidebarMenuSubButton>

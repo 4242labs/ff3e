@@ -87,6 +87,24 @@ try {
       await context.close()
     }
   }
+
+  const mobileContext = await browser.newContext({ viewport: { width: 390, height: 844 } })
+  const mobilePage = await mobileContext.newPage()
+  mobilePage.on('console', (message) => {
+    if (message.type() === 'warning' && message.text().includes('Blocked aria-hidden')) {
+      fail('mobile navigation', message.text())
+    }
+  })
+  await mobilePage.goto(baseURL, { waitUntil: 'networkidle' })
+  await mobilePage.getByRole('button', { name: 'Toggle Sidebar' }).click()
+  await mobilePage.getByRole('dialog', { name: 'Sidebar' }).waitFor()
+  await mobilePage.getByRole('button', { name: 'Charts', exact: true }).click()
+  await mobilePage.getByRole('heading', { name: 'Entropy forecast charts' }).waitFor()
+  if (await mobilePage.getByRole('dialog', { name: 'Sidebar' }).isVisible()) {
+    fail('mobile navigation', 'sidebar remained open after choosing Charts')
+  }
+  checks += 1
+  await mobileContext.close()
 } finally {
   await browser.close()
 }
