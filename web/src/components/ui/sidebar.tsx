@@ -72,8 +72,23 @@ function SidebarProvider({
   const mobileTriggerRef = React.useRef<HTMLButtonElement>(null)
   const mobileWasOpen = React.useRef(false)
   React.useEffect(() => {
-    if (mobileWasOpen.current && !openMobile) requestAnimationFrame(() => mobileTriggerRef.current?.focus())
+    let frame = 0
+
+    if (mobileWasOpen.current && !openMobile) {
+      const restoreFocusWhenVisible = () => {
+        const trigger = mobileTriggerRef.current
+        if (!trigger) return
+        if (trigger.closest('[aria-hidden="true"]')) {
+          frame = requestAnimationFrame(restoreFocusWhenVisible)
+          return
+        }
+        trigger.focus()
+      }
+      frame = requestAnimationFrame(restoreFocusWhenVisible)
+    }
     mobileWasOpen.current = openMobile
+
+    return () => cancelAnimationFrame(frame)
   }, [openMobile])
 
   // This is the internal state of the sidebar.

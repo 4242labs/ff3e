@@ -38,7 +38,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: 4242labs/design-system
-          ref: b50195995e855851c58c00bee988a8b97d0c2163 # immutable DS 2.4.3 component contract commit
+          ref: 47bfe17496aac9efe9967c8c4b497622f1bca514 # immutable DS 2.4.3 component contract commit
           token: ${{ secrets.DS_ACTION_TOKEN }} # org secret: a Contents:read PAT
           path: web/.ds-action
 
@@ -49,7 +49,7 @@ jobs:
         run: node .ds-action/.github/actions/ds-compliance/consumer-check.mjs
         env:
           DS_TOKENS_PIN: "2.4.3"
-          DS_EXPECTED_COMMIT: "b50195995e855851c58c00bee988a8b97d0c2163"
+          DS_EXPECTED_COMMIT: "47bfe17496aac9efe9967c8c4b497622f1bca514"
           DS_TOKENS_FILE: "src/ds-tokens.css"
           DS_UI_DIR: "src/components/ui"
           DS_SCAN: "src"
