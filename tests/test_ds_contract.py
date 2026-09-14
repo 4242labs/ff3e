@@ -13,7 +13,7 @@ WEB = ROOT / "web"
 SRC = WEB / "src"
 UI = SRC / "components" / "ui"
 DS_RELEASE = "2.4.3"
-DS_COMMIT = "b50195995e855851c58c00bee988a8b97d0c2163"
+DS_COMMIT = "47bfe17496aac9efe9967c8c4b497622f1bca514"
 DS_SOURCE_COMMIT = "df92a57"
 
 RAW_CONTROL = re.compile(r"<(button|input|select|textarea)(?:\s|>|/)")
