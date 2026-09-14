@@ -1,22 +1,20 @@
 import type { ItemStatus } from './types'
 
 /**
- * Fixed categorical chart ramp — raw-palette vars, cycled
+ * Fixed categorical chart ramp — semantic roles, cycled
  * if there are more than 10 series. Passed straight to Recharts as
- * `fill="var(--orange-500)"` etc. so colours track the
+ * `fill="var(--accent-solid)"` etc. so colours track the
  * the token layer at runtime instead of baking in literals.
  */
 export const CATEGORICAL_RAMP = [
-  'var(--orange-500)',
-  'var(--blue)',
-  'var(--emerald)',
-  'var(--amber)',
-  'var(--red)',
-  'var(--orange-300)',
-  'var(--blue-dark)',
-  'var(--emerald-dark)',
-  'var(--amber-dark)',
-  'var(--warm-500)',
+  'var(--accent-solid)',
+  'var(--fg)',
+  'var(--link)',
+  'var(--fg-2)',
+  'var(--logo)',
+  'var(--border-control)',
+  'var(--accent-hover)',
+  'var(--fg-muted)',
 ] as const
 
 export function colorForIndex(i: number): string {
@@ -28,11 +26,11 @@ export function colorForIndex(i: number): string {
  * acknowledged_gap -> fg-muted (quiet; the badge uses a dashed border to set it
  * apart from upcoming — a knowingly-skipped month is not alarming). */
 export const STATUS_COLOR: Record<ItemStatus, string> = {
-  paid: 'var(--emerald)',
-  done: 'var(--emerald)',
-  received: 'var(--blue)',
+  paid: 'var(--status-success)',
+  done: 'var(--status-success)',
+  received: 'var(--status-info)',
   upcoming: 'var(--fg-muted)',
-  needs_review: 'var(--amber)',
+  needs_review: 'var(--status-warning)',
   acknowledged_gap: 'var(--fg-muted)',
 }
 

@@ -50,14 +50,14 @@ export function FilterBar({
           happens only at the moment you set the first filter. */}
       {active && (
         <Button
+          className="btn btn-icon"
           variant="ghost"
-          size="icon"
-          className="h-8 w-8"
+          size="icon-sm"
           onClick={() => onChange(EMPTY_FILTERS)}
           aria-label="Clear filters"
           title="Clear filters"
         >
-          <X className="h-4 w-4" />
+          <X />
         </Button>
       )}
 

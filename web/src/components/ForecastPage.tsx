@@ -18,28 +18,12 @@ import { loadViewState, saveViewState } from '@/lib/viewstate'
 import {
   isCumulativeMode,
   type ActiveFilters,
-  type DashboardMode,
   type Granularity,
   type ViewMode,
 } from '@/lib/types'
 
-const DASHBOARD_MODE_KEY = 'entropy:dashboard'
-
-// Reads the legacy boolean ('shown' | 'hidden') alongside the current enum, so
-// an existing user's last choice carries over instead of resetting to the
-// default. 'hidden' meant "table only", which is what 'data' mode is now.
-function loadDashboardMode(): DashboardMode {
-  try {
-    const stored = localStorage.getItem(DASHBOARD_MODE_KEY)
-    return stored === 'hidden' || stored === 'data' ? 'data' : 'dashboard'
-  } catch {
-    return 'dashboard'
-  }
-}
-
-/** Outstanding & Upcoming — the forecast view. Owns its own period, filters and
- * display mode; the sidebar shell (App.tsx) only decides which page is mounted. */
-export function ForecastPage() {
+/** Shared forecast data surface for the table-only Outstanding view and Charts. */
+export function ForecastPage({ display }: { display: 'table' | 'charts' }) {
   // Resume the last view (mode / period / filters) rather than resetting to
   // defaults on every load. Read once, lazily, on mount.
   const [persisted] = useState(loadViewState)
@@ -50,19 +34,6 @@ export function ForecastPage() {
   useEffect(() => {
     saveViewState({ mode, anchor, filters })
   }, [mode, anchor, filters])
-  // Dashboard mode (stat cards + charts) vs data mode (the item table) —
-  // mutually exclusive, never both. Defaults to dashboard; the choice persists
-  // across reloads.
-  const [dashboardMode, setDashboardMode] = useState<DashboardMode>(loadDashboardMode)
-  const changeDashboardMode = (next: DashboardMode) => {
-    setDashboardMode(next)
-    try {
-      localStorage.setItem(DASHBOARD_MODE_KEY, next)
-    } catch {
-      /* private mode / storage disabled — session-only toggle is fine */
-    }
-  }
-
   // Data-table-only: which asset account(s) collapse into a subtotal row per
   // period instead of one row per item. Independent of the Account filter —
   // its options are every asset account in the dataset, not just whatever's
@@ -139,13 +110,11 @@ export function ForecastPage() {
         filterOptions={filterOptions}
         filters={filters}
         onFiltersChange={setFilters}
-        dashboardMode={dashboardMode}
-        onDashboardModeChange={changeDashboardMode}
-        groupAccounts={groupAccounts}
-        onGroupAccountsChange={setGroupAccounts}
+        groupAccounts={display === 'table' ? groupAccounts : undefined}
+        onGroupAccountsChange={display === 'table' ? setGroupAccounts : undefined}
       />
 
-      <main className="w-full max-w-7xl px-4 py-4 sm:px-6">
+      <div className="w-full max-w-(--w-2xl) px-(--pad-x) py-6">
           {loading && !data && <LoadingSkeleton />}
           {error && !data && <ErrorState message={error} onRetry={refetch} />}
 
@@ -154,18 +123,20 @@ export function ForecastPage() {
               each chart's local currency/group-by selection. */}
           {data && filtered && (
             <div className={loading ? 'opacity-60 transition-opacity' : undefined}>
-              {error && (
-                <p className="mb-4 text-sm" style={{ color: 'var(--red)' }}>
-                  Refresh failed ({error}) — showing the last successful load.
-                </p>
-              )}
+              {error ? (
+                <ErrorState
+                  title="Refresh failed"
+                  message={`${error} — showing the last successful load.`}
+                  onRetry={refetch}
+                />
+              ) : null}
 
-              <div className="space-y-4">
+              <div className="flex flex-col gap-6">
                 {filtered.meta.item_count === 0 ? (
                   <EmptyState message={emptyMessage} />
                 ) : (
                   <>
-                    {dashboardMode === 'dashboard' ? (
+                    {display === 'charts' ? (
                       <>
                         <SummaryCards currencies={filtered.currencies} />
 
@@ -180,7 +151,9 @@ export function ForecastPage() {
                             currency-sensitive chart renders one instance per
                             currency in `availableCurrencies`, so selecting
                             two currencies up top shows two of each chart. */}
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                        <section className="flex flex-col gap-4" aria-labelledby="forecast-charts-heading">
+                          <div className="sec-head"><h2 id="forecast-charts-heading">Forecast analysis</h2></div>
+                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                           {availableCurrencies.map((cur) => (
                             <PeriodBar
                               key={`iof-${cur}`}
@@ -225,7 +198,8 @@ export function ForecastPage() {
                               showCurrencyInTitle={availableCurrencies.length > 1}
                             />
                           ))}
-                        </div>
+                          </div>
+                        </section>
                       </>
                     ) : (
                       <PeriodTable periods={sortedFilteredPeriods} groupAccounts={groupAccounts} />
@@ -235,7 +209,7 @@ export function ForecastPage() {
               </div>
             </div>
           )}
-      </main>
+      </div>
     </>
   )
 }

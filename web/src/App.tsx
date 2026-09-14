@@ -10,7 +10,8 @@ const VIEW_KEY = 'entropy:view'
 
 function loadView(): AppView {
   try {
-    return localStorage.getItem(VIEW_KEY) === 'reports' ? 'reports' : 'forecast'
+    const stored = localStorage.getItem(VIEW_KEY)
+    return stored === 'reports' || stored === 'charts' ? stored : 'forecast'
   } catch {
     return 'forecast'
   }
@@ -42,7 +43,16 @@ export default function App() {
   return (
     <SidebarProvider>
       <AppSidebar activeView={view} onNavigate={changeView} />
-      <SidebarInset>{view === 'reports' ? <ReportsPage /> : <ForecastPage />}</SidebarInset>
+      <SidebarInset>
+        <h1 className="sr-only">
+          {view === 'reports'
+            ? 'Entropy reports'
+            : view === 'charts'
+              ? 'Entropy forecast charts'
+              : 'Entropy outstanding and upcoming forecast'}
+        </h1>
+        {view === 'reports' ? <ReportsPage /> : <ForecastPage display={view === 'charts' ? 'charts' : 'table'} />}
+      </SidebarInset>
     </SidebarProvider>
   )
 }

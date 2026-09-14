@@ -52,7 +52,7 @@ function PeriodBarChart({
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <BarChart layout="vertical" data={data} margin={{ top: 8, right: 24, left: 8, bottom: 8 }}>
+      <BarChart layout="vertical" data={data} margin={{ top: 8, right: 24, left: 8, bottom: 8 }} role="img" aria-label={`In, out, and net for ${currency}: ${data.map((row) => `${row.name} ${formatMoney(row.magnitude, currency)}`).join('; ')}`}>
         {/* Hide numeric ticks: on a symmetric diverging axis the abs
             formatter prints the same value on both ends (confusing), and
             the exact In/Out/Net figures already live in the summary
@@ -62,22 +62,22 @@ function PeriodBarChart({
         <YAxis
           type="category"
           dataKey="name"
-          tick={{ fontSize: 12, fill: 'var(--fg-muted)' }}
+          tick={{ fontSize: 'var(--t-xs)', fontFamily: 'var(--font-mono)', fill: 'var(--fg-muted)' }}
           axisLine={{ stroke: 'var(--border)' }}
           tickLine={false}
           width={44}
         />
         <Tooltip
-          cursor={{ fill: 'var(--muted)', opacity: 0.4 }}
+          cursor={{ fill: 'var(--surface-muted)', opacity: 0.4 }}
           formatter={(_value: number, _name: string, item: { payload?: Row }) =>
             formatMoney(item?.payload?.magnitude ?? 0, currency)
           }
           labelFormatter={() => ''}
           contentStyle={{
-            background: 'var(--popover)',
+            background: 'var(--surface-alt)',
             border: '1px solid var(--border)',
-            borderRadius: 'var(--radius)',
-            color: 'var(--popover-foreground)',
+            borderRadius: 'var(--r-2)',
+            color: 'var(--fg)',
           }}
         />
         <Bar dataKey="value" radius={3} barSize={24} isAnimationActive={false}>
@@ -109,9 +109,9 @@ export function PeriodBar({ periods, currency, showCurrencyInTitle }: PeriodBarP
     }
     const net = inflow - out
     return [
-      { name: 'In', value: inflow, magnitude: inflow, fill: 'var(--emerald)' },
-      { name: 'Out', value: -out, magnitude: out, fill: 'var(--red)' },
-      { name: 'Net', value: net, magnitude: net, fill: 'var(--blue)' },
+      { name: 'In', value: inflow, magnitude: inflow, fill: 'var(--fg-2)' },
+      { name: 'Out', value: -out, magnitude: out, fill: 'var(--accent-solid)' },
+      { name: 'Net', value: net, magnitude: net, fill: 'var(--border-control)' },
     ]
   }, [periods, currency])
 

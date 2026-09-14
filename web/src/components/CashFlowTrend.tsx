@@ -30,17 +30,17 @@ function CashFlowTrendChart({
 }) {
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
+      <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 8 }} role="img" aria-label={`Cash flow ${currency}: ${data.map((row) => `${row.name}, in ${formatMoney(row.In, currency)}, out ${formatMoney(Math.abs(row.Out), currency)}, net ${formatMoney(row.Net, currency)}`).join('; ')}`}>
         <CartesianGrid vertical={false} stroke="var(--border)" />
         <XAxis
           dataKey="name"
-          tick={{ fontSize: 11, fill: 'var(--fg-muted)' }}
+          tick={{ fontSize: 'var(--t-xs)', fontFamily: 'var(--font-mono)', fill: 'var(--fg-muted)' }}
           axisLine={{ stroke: 'var(--border)' }}
           tickLine={false}
           interval="preserveStartEnd"
         />
         <YAxis
-          tick={{ fontSize: 11, fill: 'var(--fg-muted)' }}
+          tick={{ fontSize: 'var(--t-xs)', fontFamily: 'var(--font-mono)', fill: 'var(--fg-muted)' }}
           axisLine={false}
           tickLine={false}
           width={40}
@@ -49,16 +49,16 @@ function CashFlowTrendChart({
         <Tooltip
           formatter={(value: number) => formatMoney(value, currency)}
           contentStyle={{
-            background: 'var(--popover)',
+            background: 'var(--surface-alt)',
             border: '1px solid var(--border)',
-            borderRadius: 'var(--radius)',
-            color: 'var(--popover-foreground)',
+            borderRadius: 'var(--r-2)',
+            color: 'var(--fg)',
           }}
         />
-        <Legend wrapperStyle={{ fontSize: 11 }} />
-        <Bar dataKey="In" fill="var(--emerald)" radius={2} isAnimationActive={false} />
-        <Bar dataKey="Out" fill="var(--red)" radius={2} isAnimationActive={false} />
-        <Bar dataKey="Net" fill="var(--blue)" radius={2} isAnimationActive={false} />
+        <Legend wrapperStyle={{ fontSize: 'var(--t-xs)', fontFamily: 'var(--font-mono)' }} />
+        <Bar dataKey="In" fill="var(--fg-2)" radius={4} isAnimationActive={false} />
+        <Bar dataKey="Out" fill="var(--accent-solid)" radius={4} isAnimationActive={false} />
+        <Bar dataKey="Net" fill="var(--border-control)" radius={4} isAnimationActive={false} />
       </BarChart>
     </ResponsiveContainer>
   )

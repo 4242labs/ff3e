@@ -50,10 +50,12 @@ function BreakdownPieChart({
   data,
   currency,
   height,
+  accessibleLabel,
 }: {
   data: Slice[]
   currency: string
   height: number
+  accessibleLabel: string
 }) {
   // Scales with the container: small in the compact card, large in the
   // fullscreen overlay. Only a thin margin held back so the pie fills the
@@ -63,7 +65,7 @@ function BreakdownPieChart({
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <PieChart>
+      <PieChart role="img" aria-label={accessibleLabel}>
         {/* Legend rides on the left (own column, full height, no clipping);
             the pie is re-centred right (cx) to leave it room instead of
             overlapping. paddingAngle only between real slices — on a single
@@ -78,18 +80,20 @@ function BreakdownPieChart({
           outerRadius={outerRadius}
           paddingAngle={data.length > 1 ? 0.5 : 0}
           isAnimationActive={false}
+          role="presentation"
+          aria-hidden="true"
         >
           {data.map((entry, i) => (
-            <Cell key={entry.name} fill={colorForIndex(i)} />
+            <Cell key={entry.name} fill={colorForIndex(i)} role="presentation" aria-hidden="true" />
           ))}
         </Pie>
         <Tooltip
           formatter={(value: number) => formatMoney(value, currency)}
           contentStyle={{
-            background: 'var(--popover)',
+            background: 'var(--surface-alt)',
             border: '1px solid var(--border)',
-            borderRadius: 'var(--radius)',
-            color: 'var(--popover-foreground)',
+            borderRadius: 'var(--r-2)',
+            color: 'var(--fg)',
           }}
         />
         <Legend
@@ -161,14 +165,23 @@ export function BreakdownPie({ groupBy, periods, currency, showCurrencyInTitle }
   }, [periods, groupBy, currency])
 
   const compactHeight = Math.max(MIN_CHART_HEIGHT, data.length * LEGEND_ROW + 24)
+  const title = chartTitle(TITLE[groupBy], currency, showCurrencyInTitle)
+  const accessibleLabel = `${title}: ${data
+    .map(({ name, value }) => `${name} ${formatMoney(value, currency)}`)
+    .join(', ')}`
 
   return (
-    <ChartCard title={chartTitle(TITLE[groupBy], currency, showCurrencyInTitle)} compactHeight={compactHeight}>
+    <ChartCard title={title} compactHeight={compactHeight}>
       {(height) =>
         data.length === 0 ? (
           <EmptyState message="No expenses in this range." />
         ) : (
-          <BreakdownPieChart data={data} currency={currency} height={Number(height)} />
+          <BreakdownPieChart
+            data={data}
+            currency={currency}
+            height={Number(height)}
+            accessibleLabel={accessibleLabel}
+          />
         )
       }
     </ChartCard>

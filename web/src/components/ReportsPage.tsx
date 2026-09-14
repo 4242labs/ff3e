@@ -6,6 +6,7 @@ import { LoadingSkeleton } from '@/components/LoadingSkeleton'
 import { ReportChart, ReportFlowLegend } from '@/components/ReportChart'
 import { ReportsNav } from '@/components/ReportsNav'
 import { useTransactions } from '@/hooks/useTransactions'
+import { DEMO_TRANSACTION_RANGE } from '@/lib/api'
 import { customRangeLabel, periodLabel, reportRange, shiftAnchor, singlePeriodRange, todayISO } from '@/lib/range'
 import {
   buildReport,
@@ -64,17 +65,22 @@ export function ReportsPage() {
   const monthCards = groupByMonth && periodMode !== 'month'
   const sellerBars = groupBySeller && view === 'transactions'
 
+  const demo = import.meta.env.MODE === 'demo'
   const range = useMemo(
-    () => reportRange(periodMode, anchor, custom),
-    [periodMode, anchor, custom],
+    () => demo ? DEMO_TRANSACTION_RANGE : reportRange(periodMode, anchor, custom),
+    [demo, periodMode, anchor, custom],
   )
   const query = useMemo(() => ({ start: range.start, end: range.end }), [range.start, range.end])
 
   const { data, loading, error, refetch } = useTransactions(query)
 
   const label = useMemo(
-    () => (isCustom ? customRangeLabel(custom) : periodLabel(periodMode as Granularity, anchor)),
-    [isCustom, custom, periodMode, anchor],
+    () => demo
+      ? 'May 1–Jul 31, 2026 · demo'
+      : isCustom
+        ? customRangeLabel(custom)
+        : periodLabel(periodMode as Granularity, anchor),
+    [demo, isCustom, custom, periodMode, anchor],
   )
 
   const isCurrent = useMemo(() => {
@@ -137,26 +143,26 @@ export function ReportsPage() {
         onFiltersChange={setFilters}
         onRefresh={refetch}
         loading={loading}
+        demo={demo}
       />
 
-      <main className="w-full max-w-7xl px-4 py-4 sm:px-6">
+      <div className="w-full max-w-(--w-2xl) px-(--pad-x) py-6">
         {loading && !data && <LoadingSkeleton />}
-        {error && !data && <ErrorState message={error} onRetry={refetch} />}
+        {error && !data && <ErrorState title="Couldn't load reports" message={error} onRetry={refetch} />}
 
         {/* Keep the last-good report rendered (dimmed) across a period switch
             rather than tearing the subtree down — preserves each card's page. */}
         {data && (
           <div className={loading ? 'opacity-60 transition-opacity' : undefined}>
-            {error && (
-              <p className="mb-4 text-sm" style={{ color: 'var(--red)' }}>
-                Refresh failed ({error}) — showing the last successful load.
-              </p>
-            )}
+            {error ? (
+              <ErrorState title="Refresh failed" message={`${error} — showing the last successful load.`} onRetry={refetch} />
+            ) : null}
 
             {report.length === 0 ? (
               <EmptyState message="No transactions in this period." />
             ) : (
-              <div className="space-y-4">
+              <section className="flex flex-col gap-4" aria-labelledby="reports-heading">
+                <div className="sec-head"><h2 id="reports-heading">Transaction report</h2></div>
                 {/* One card takes the whole row; more than one splits it in two
                     and wraps. Two is the ceiling: a third column starves the
                     label and the bar, and a report you cannot read the labels of
@@ -169,11 +175,11 @@ export function ReportsPage() {
                   ))}
                 </div>
                 <ReportFlowLegend flows={flowsPresent} />
-              </div>
+              </section>
             )}
           </div>
         )}
-      </main>
+      </div>
     </>
   )
 }

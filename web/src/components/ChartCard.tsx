@@ -24,8 +24,7 @@ const OVERLAY_CHART_HEIGHT = 560
 
 // The overlay is deliberately viewport-relative (a near-fullscreen chart) —
 // no equivalent on the DS's fixed spacing/token scale.
-// drift-allow: fullscreen dialog sizing has no token equivalent (vh/vw, not a spacing step)
-const OVERLAY_CONTENT_CLASS = 'flex h-[90vh] w-[95vw] max-w-6xl flex-col overflow-hidden'
+const OVERLAY_CONTENT_CLASS = 'flex h-dvh w-full max-w-6xl flex-col overflow-hidden'
 
 export function ChartCard({ title, headerExtra, children, compactHeight }: ChartCardProps) {
   const [open, setOpen] = useState(false)
@@ -33,19 +32,19 @@ export function ChartCard({ title, headerExtra, children, compactHeight }: Chart
   return (
     <>
       <Card className="gap-2 py-3">
-        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
-          <CardTitle className="text-sm">{title}</CardTitle>
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
+          <CardTitle className="lbl lbl-fg">{title}</CardTitle>
           <div className="flex items-center gap-1">
             {headerExtra}
             <Button
+              className="btn btn-icon"
               variant="ghost"
-              size="icon"
-              className="h-7 w-7"
+              size="icon-sm"
               onClick={() => setOpen(true)}
               aria-label={`Expand ${title}`}
               title="Expand"
             >
-              <Maximize2 className="h-3.5 w-3.5" />
+              <Maximize2 />
             </Button>
           </div>
         </CardHeader>
@@ -54,8 +53,8 @@ export function ChartCard({ title, headerExtra, children, compactHeight }: Chart
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className={OVERLAY_CONTENT_CLASS}>
-          <DialogHeader className="flex-row items-center justify-between gap-2 space-y-0">
-            <DialogTitle>{title}</DialogTitle>
+          <DialogHeader className="flex-row items-center justify-between gap-2">
+            <DialogTitle className="lbl lbl-fg">{title}</DialogTitle>
             {headerExtra && <div className="flex items-center gap-2 pr-6">{headerExtra}</div>}
           </DialogHeader>
           <div className="flex min-h-0 flex-1 items-center justify-center">

@@ -4,10 +4,13 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-function Table({ className, ...props }: React.ComponentProps<"table">) {
+function Table({ containerLabel, className, ...props }: React.ComponentProps<"table"> & { containerLabel?: string }) {
   return (
     <div
       data-slot="table-container"
+      role={containerLabel ? "region" : undefined}
+      aria-label={containerLabel}
+      tabIndex={0}
       className="relative w-full overflow-x-auto"
     >
       <table
