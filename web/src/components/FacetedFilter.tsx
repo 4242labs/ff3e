@@ -39,8 +39,7 @@ export function FacetedFilter({
 }: FacetedFilterProps) {
   const [open, setOpen] = useState(false)
   const selectedSet = new Set(selected)
-  const selectedOptions = options.filter((option) => selectedSet.has(option.value))
-  const selectedValue = selectedOptions[0]?.short ?? selectedOptions[0]?.label
+  const selectedLabel = options.find((option) => selectedSet.has(option.value))?.label
 
   const toggle = (value: string) => {
     if (single) {
@@ -60,9 +59,9 @@ export function FacetedFilter({
           className="barbtn"
           disabled={disabled}
           aria-expanded={open}
+          aria-label={single && selectedLabel ? `${title}, selected ${selectedLabel}` : title}
         >
           <span>{title}</span>
-          {single && selectedValue ? <span className="value">{selectedValue}</span> : null}
           {!single && selected.length > 0 ? <span className="count">{selected.length}</span> : null}
           <ChevronDown aria-hidden="true" />
         </Button>
