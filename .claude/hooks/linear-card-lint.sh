@@ -7,13 +7,14 @@
 # Blocks a save_issue call when:
 #   - `state` is outside the agent vocabulary (all other states are operator-only),
 #   - `assignee` is present and is not the fleet default,
-#   - a CREATE call (no `id`) is missing the universal label, the owner line, or the
-#     signature history in its description.
+#   - a CREATE call (no `id`) is missing the universal label, the owner line, the
+#     signature history in its description, or the project.
 # On close/update calls the current card body is not readable here, so description
 # checks apply only when the call carries a `description` — the skill still binds.
 #
 # Config (optional): .claude/hooks/linear-lint.config.json
-#   { "allowed_states": ["..."], "assignee": "ops@42labs.io" }
+#   { "allowed_states": ["..."], "assignee": "ops@42labs.io", "require_project": true }
+# Set require_project false only where the project is configured `<LINEAR_PROJECT> = none`.
 # Defaults below are the fleet contract. Installed per project at retrofit — inert
 # until wired into .claude/settings.json.
 
@@ -29,15 +30,18 @@ cfg="$proj/.claude/hooks/linear-lint.config.json"
 
 allowed_states='["🤖 Minions Backlog","🤖 Minions To-Do","🤖 Minions Deployed","Done","Canceled","Duplicate"]'
 assignee_expected="ops@42labs.io"
+require_project=true
 if [ -f "$cfg" ]; then
   s=$(jq -c '.allowed_states // empty' "$cfg" 2>/dev/null); [ -n "$s" ] && allowed_states="$s"
   a=$(jq -r '.assignee // empty' "$cfg" 2>/dev/null); [ -n "$a" ] && assignee_expected="$a"
+  r=$(jq -r 'if has("require_project") then .require_project else empty end' "$cfg" 2>/dev/null); [ -n "$r" ] && require_project="$r"
 fi
 
 ti=$(printf '%s' "$input" | jq '.tool_input // {}')
 state=$(printf '%s' "$ti" | jq -r '.state // .status // empty')
 assignee=$(printf '%s' "$ti" | jq -r '.assignee // empty')
 card_id=$(printf '%s' "$ti" | jq -r '.id // empty')
+project=$(printf '%s' "$ti" | jq -r '.project // .projectId // empty')
 desc=$(printf '%s' "$ti" | jq -r '.description // empty')
 
 fail=0
@@ -64,6 +68,11 @@ if [ -z "$card_id" ]; then
       || say "description does not OPEN with the owner line '> **Owner:** <AGENT_ROLE> · Session ...' (skill-linear-cards §6a)."
     printf '%s\n' "$desc" | grep -q '^🤖 _' \
       || say "description has no signature history line ('🤖 _<AGENT_ROLE> · ... — created_') (skill-linear-cards §6b)."
+  fi
+  # A project-less card sits on no board, so the work is invisible the moment the
+  # session ends. The skill has always called this mandatory; nothing enforced it.
+  if [ "$require_project" = "true" ] && [ -z "$project" ]; then
+    say "create call has no project. Every card MUST name one, and sub-issues do NOT inherit the parent's (skill-linear-cards §5). A project-less card appears on no board."
   fi
   labels_joined=$(printf '%s' "$ti" | jq -r '(.labels // []) | join("|")')
   case "$labels_joined" in
