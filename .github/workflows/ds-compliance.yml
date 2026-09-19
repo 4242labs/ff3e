@@ -49,6 +49,7 @@ jobs:
         run: node .ds-action/.github/actions/ds-compliance/consumer-check.mjs
         env:
           DS_TOKENS_PIN: "2.4.4"
+          DS_ALLOW_BEHIND: "1" # T2: currency gate removed from pull_request; currency moves to the nightly fleet report
           DS_EXPECTED_COMMIT: "1a9c53281c05b4e4c82a9ad5696584184d29b221"
           DS_TOKENS_FILE: "src/ds-tokens.css"
           DS_UI_DIR: "src/components/ui"
