@@ -34,30 +34,27 @@ jobs:
         working-directory: .
         run: python -m pip install pytest
 
-      - name: Fetch the design-system check (it lives in the private DS repo)
-        uses: actions/checkout@v4
-        with:
-          repository: 4242labs/design-system
-          ref: 1a9c53281c05b4e4c82a9ad5696584184d29b221 # immutable DS 2.4.4 component contract commit
-          token: ${{ secrets.DS_ACTION_TOKEN }} # org secret: a Contents:read PAT
-          path: web/.ds-action
-
-      # Run the check from `web/` (not via the composite action) so shadcn's
-      # Gate-3 resolve sees this app's components.json. The action's own step
-      # runs from the repo root, which has no components.json in a web/ monorepo.
-      - name: DS compliance — tokens, primitives, own-code drift
-        run: node .ds-action/.github/actions/ds-compliance/consumer-check.mjs
-        env:
-          DS_TOKENS_PIN: "2.4.4"
-          DS_ALLOW_BEHIND: "1" # T2: currency gate removed from pull_request; currency moves to the nightly fleet report
-          DS_EXPECTED_COMMIT: "1a9c53281c05b4e4c82a9ad5696584184d29b221"
-          DS_TOKENS_FILE: "src/ds-tokens.css"
-          DS_UI_DIR: "src/components/ui"
-          DS_SCAN: "src"
+      # CHECKER MODE. The check comes from public npm, not from a checkout of the private
+      # design-system repository, so no credential is read here — `DS_ACTION_TOKEN` is gone.
+      # The tokens are still vendored in this repository and still pinned: `--tokens-file`
+      # is the copy, and the checker compares it against the tokens it ships itself.
+      #
+      # That is why `--expect` equals the checker version. The reference and the checker are
+      # one artifact, so a checker cannot vouch for a version it does not carry. Moving the
+      # pin therefore means moving both, and it is a deliberate re-vendor — here, 2.4.4 to
+      # 2.4.7, whose token values are identical, so nothing renders differently.
+      #
+      # No NODE_AUTH_TOKEN, no NPM_TOKEN, no .npmrc: the package is public and has to resolve
+      # anonymously from a public repository. If that ever stops being true, it fails here.
+      - name: DS compliance — vendored tokens, own-code drift
+        run: |
+          npx --yes --package=@4242labs/design-system@2.4.7 -- \
+            42labs-ds-check --scan src --expect 2.4.7 \
+              --tokens-file src/ds-tokens.css --ui-dir src/components/ui
 
       - name: Exact component and artifact provenance contract
         working-directory: .
-        run: DS_CANDIDATE="$PWD/web/.ds-action" python -m pytest -q tests/test_ds_contract.py
+        run: python -m pytest -q tests/test_ds_contract.py
 
       - name: Install browser for accessibility gate
         run: npx playwright install --with-deps chromium

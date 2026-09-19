@@ -12,9 +12,8 @@ ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "web"
 SRC = WEB / "src"
 UI = SRC / "components" / "ui"
-DS_RELEASE = "2.4.4"
-DS_COMMIT = "1a9c53281c05b4e4c82a9ad5696584184d29b221"
-DS_SOURCE_COMMIT = "ede558d"
+DS_RELEASE = "2.4.7"
+DS_SOURCE_COMMIT = "ae92bbc"
 
 RAW_CONTROL = re.compile(r"<(button|input|select|textarea)(?:\s|>|/)")
 ARBITRARY_VALUE = re.compile(r"\b[a-z][a-z-]*-\[[^\]]+\]")
@@ -167,9 +166,13 @@ def test_alfred_build_contract_is_exact_and_uses_npm_ci() -> None:
 
 def test_ci_pins_exact_ds_release_and_runs_provenance_and_browser_gates() -> None:
     workflow = (ROOT / ".github" / "workflows" / "ds-compliance.yml").read_text()
-    assert f"ref: {DS_COMMIT}" in workflow
-    assert f'DS_TOKENS_PIN: "{DS_RELEASE}"' in workflow
-    assert "DS_EXPECTED_COMMIT" in workflow
+    assert f"@4242labs/design-system@{DS_RELEASE}" in workflow
+    assert f"--expect {DS_RELEASE}" in workflow
+    assert "--tokens-file src/ds-tokens.css" in workflow
+    # The credential this migration removes, and the checkout that needed it.
+    # Neither may come back by accident.
+    assert "secrets.DS_ACTION_TOKEN" not in workflow
+    assert "repository: 4242labs/design-system" not in workflow
     assert "npm run test:browser:a11y" in workflow
     package = json.loads((WEB / "package.json").read_text())
     assert package["scripts"]["test:browser:a11y"] == "node scripts/test-browser-a11y.mjs"
@@ -191,8 +194,8 @@ def test_local_candidate_adopted_sources_are_byte_identical() -> None:
         pytest.skip("set DS_CANDIDATE to byte-check the local design-system candidate")
     ds_src = Path(candidate) / "src"
     pairs = [(UI / name, ds_src / "components" / "ui" / name) for name in ADOPTED_UI]
-    pairs.append((SRC / "ds-tokens.css", Path(candidate) / "public" / "tokens.v2.4.4.css"))
-    pairs.append((SRC / "ds-tailwind.css", Path(candidate) / "public" / "tailwind.v2.4.4.css"))
+    pairs.append((SRC / "ds-tokens.css", Path(candidate) / "public" / f"tokens.v{DS_RELEASE}.css"))
+    pairs.append((SRC / "ds-tailwind.css", Path(candidate) / "public" / f"tailwind.v{DS_RELEASE}.css"))
     pairs.append((SRC / "components" / "brand-mark.tsx", ds_src / "components" / "brand-mark.tsx"))
     mismatches = [
         str(local.relative_to(ROOT))
