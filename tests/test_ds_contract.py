@@ -12,8 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "web"
 SRC = WEB / "src"
 UI = SRC / "components" / "ui"
-DS_RELEASE = "2.4.7"
-DS_SOURCE_COMMIT = "ae92bbc"
+DS_RELEASE = "2.4.8"
 
 RAW_CONTROL = re.compile(r"<(button|input|select|textarea)(?:\s|>|/)")
 ARBITRARY_VALUE = re.compile(r"\b[a-z][a-z-]*-\[[^\]]+\]")
@@ -127,19 +126,13 @@ def test_pie_chart_has_one_named_graphic_and_decorative_sectors() -> None:
 
 
 def test_permanent_rail_uses_complete_dark_roles_and_dark_assets() -> None:
-    tokens = (SRC / "ds-tokens.css").read_text()
-    dark = tokens[tokens.index("body.theme-dark,") :]
-    for role in (
-        "--surface:", "--surface-alt:", "--surface-muted:", "--surface-subtle:",
-        "--border:", "--border-subtle:", "--border-control:",
-        "--fg:", "--fg-2:", "--fg-muted:", "--fg-disabled:",
-        "--accent:", "--accent-hover:", "--accent-solid:", "--accent-solid-hover:",
-        "--accent-soft:", "--accent-border:", "--accent-focus:", "--accent-on:",
-        "--link:", "--link-hover:", "--logo: var(--mint-300);",
-        "--logo-word: var(--warm-50);",
-    ):
-        assert role in dark
+    """The dark roles this rail needs are the design system's to guarantee, not this
+    repository's to re-assert. They used to be checked here against a vendored copy of
+    the tokens; in package mode there is no copy, and the design system's own gate
+    already resolves all 42 semantic roles in both modes on every release.
 
+    What is left is the part that is actually FF3E's: that the rail uses them.
+    """
     sidebar = (SRC / "components" / "AppSidebar.tsx").read_text()
     assert "buymeacoffee.com" in sidebar
     assert 'className="band-dark"' in sidebar
@@ -167,8 +160,9 @@ def test_alfred_build_contract_is_exact_and_uses_npm_ci() -> None:
 def test_ci_pins_exact_ds_release_and_runs_provenance_and_browser_gates() -> None:
     workflow = (ROOT / ".github" / "workflows" / "ds-compliance.yml").read_text()
     assert f"@4242labs/design-system@{DS_RELEASE}" in workflow
-    assert f"--expect {DS_RELEASE}" in workflow
-    assert "--tokens-file src/ds-tokens.css" in workflow
+    # The pin is read out of package.json, so a bump moves one file and goes green alone.
+    assert '--expect "$PIN"' in workflow
+    assert "--ui-dir src/components/ui" in workflow
     # The credential this migration removes, and the checkout that needed it.
     # Neither may come back by accident.
     assert "secrets.DS_ACTION_TOKEN" not in workflow
@@ -178,14 +172,25 @@ def test_ci_pins_exact_ds_release_and_runs_provenance_and_browser_gates() -> Non
     assert package["scripts"]["test:browser:a11y"] == "node scripts/test-browser-a11y.mjs"
 
 
-def test_vendored_token_artifact_has_final_release_provenance() -> None:
-    tokens = (SRC / "ds-tokens.css").read_text()
-    assert f"Version {DS_RELEASE}" in tokens
-    assert f"commit {DS_SOURCE_COMMIT}" in tokens
-    assert f"/blob/{DS_SOURCE_COMMIT}/src/app/globals.css" in tokens
-    bridge = (SRC / "ds-tailwind.css").read_text()
-    assert f"Version {DS_RELEASE}" in bridge
-    assert f"commit {DS_SOURCE_COMMIT}" in bridge
+def test_tokens_come_from_the_package_and_not_from_a_copy() -> None:
+    """Package mode: there is no vendored artifact to hold to a provenance any more.
+
+    What replaces it is stronger — the pin is a version the package manager resolves
+    and the lockfile records, and the compliance gate refuses any byte-identical copy
+    of the package stylesheets anywhere in the tree.
+    """
+    manifest = json.loads((WEB / "package.json").read_text())
+    assert manifest["dependencies"]["@4242labs/design-system"] == DS_RELEASE
+    lock = json.loads((WEB / "package-lock.json").read_text())
+    entry = lock["packages"]["node_modules/@4242labs/design-system"]
+    assert entry["version"] == DS_RELEASE
+    assert entry["resolved"].startswith("https://registry.npmjs.org/")
+    assert entry["integrity"].startswith("sha512-")
+    assert not (SRC / "ds-tokens.css").exists()
+    assert not (SRC / "ds-tailwind.css").exists()
+    css = (SRC / "index.css").read_text()
+    assert '@import "@4242labs/design-system/tokens.css";' in css
+    assert '@import "@4242labs/design-system/tailwind.css";' in css
 
 
 def test_local_candidate_adopted_sources_are_byte_identical() -> None:
@@ -194,8 +199,6 @@ def test_local_candidate_adopted_sources_are_byte_identical() -> None:
         pytest.skip("set DS_CANDIDATE to byte-check the local design-system candidate")
     ds_src = Path(candidate) / "src"
     pairs = [(UI / name, ds_src / "components" / "ui" / name) for name in ADOPTED_UI]
-    pairs.append((SRC / "ds-tokens.css", Path(candidate) / "public" / f"tokens.v{DS_RELEASE}.css"))
-    pairs.append((SRC / "ds-tailwind.css", Path(candidate) / "public" / f"tailwind.v{DS_RELEASE}.css"))
     pairs.append((SRC / "components" / "brand-mark.tsx", ds_src / "components" / "brand-mark.tsx"))
     mismatches = [
         str(local.relative_to(ROOT))

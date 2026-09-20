@@ -34,23 +34,24 @@ jobs:
         working-directory: .
         run: python -m pip install pytest
 
-      # CHECKER MODE. The check comes from public npm, not from a checkout of the private
-      # design-system repository, so no credential is read here — `DS_ACTION_TOKEN` is gone.
-      # The tokens are still vendored in this repository and still pinned: `--tokens-file`
-      # is the copy, and the checker compares it against the tokens it ships itself.
+      # PACKAGE MODE. The tokens arrive through `@4242labs/design-system`, pinned exactly in
+      # web/package.json, and the check is that package's own binary from public npm. No
+      # design-system credential is read here: `DS_ACTION_TOKEN` is gone, and so is the
+      # checkout of the private repository that needed it.
       #
-      # That is why `--expect` equals the checker version. The reference and the checker are
-      # one artifact, so a checker cannot vouch for a version it does not carry. Moving the
-      # pin therefore means moving both, and it is a deliberate re-vendor — here, 2.4.4 to
-      # 2.4.7, whose token values are identical, so nothing renders differently.
+      # The checker version and the pin are separate numbers. The pin is what this app
+      # renders; the checker is whatever version has the gates, and moving it moves no pixel.
       #
       # No NODE_AUTH_TOKEN, no NPM_TOKEN, no .npmrc: the package is public and has to resolve
       # anonymously from a public repository. If that ever stops being true, it fails here.
-      - name: DS compliance — vendored tokens, own-code drift
+      # The pin is read out of package.json rather than repeated here, so a bump pull
+      # request moves one file and can go green on its own.
+      - name: DS compliance — package integrity, own-code drift
         run: |
-          npx --yes --package=@4242labs/design-system@2.4.7 -- \
-            42labs-ds-check --scan src --expect 2.4.7 \
-              --tokens-file src/ds-tokens.css --ui-dir src/components/ui
+          PIN=$(node -p "require('./package.json').dependencies['@4242labs/design-system']")
+          echo "pinned at $PIN"
+          npx --yes --package=@4242labs/design-system@2.4.8 -- \
+            42labs-ds-check --scan src --expect "$PIN" --ui-dir src/components/ui
 
       - name: Exact component and artifact provenance contract
         working-directory: .
@@ -67,3 +68,175 @@ jobs:
 
       - name: Browser accessibility and overflow gate
         run: npm run test:browser:a11y
+
+  # A design-system bump is the one change that can move every rendered surface at once,
+  # and the diff of a bump pull request shows only two lines of JSON. This job reads the
+  # two releases and says what actually moved.
+  #
+  # Nothing moved — no token value and no component's code differs between the old pin and
+  # the new one — and the bump is merged here. §P6 forbids a bot moving a consumer forward, and that still holds:
+  # what is merged is a version number, provably not a rendered byte.
+  #
+  # Something moved, and the job posts the moved declarations on the pull request and stops.
+  # A retrofit with visual evidence is owed, and it is the operator's call.
+  bump-impact:
+    needs: ds
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: read
+      statuses: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Read the pin on both sides
+        id: pins
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          read_pin() { node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).dependencies['@4242labs/design-system'] ?? ''"; }
+          BASE=$(git show "origin/$BASE_REF:web/package.json" | read_pin)
+          HEAD=$(read_pin < web/package.json)
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+          echo "head=$HEAD" >> "$GITHUB_OUTPUT"
+          if [ -z "$BASE" ] || [ -z "$HEAD" ] || [ "$BASE" = "$HEAD" ]; then
+            echo "This pull request does not move the design-system pin ($HEAD)."
+            echo "moved=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "moved=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Comment lines carry the version and the source commit, which differ on every release
+      # by construction. They are stripped so the comparison is of token values alone.
+      - name: Compare what the two releases actually render
+        if: steps.pins.outputs.moved == 'true'
+        id: impact
+        env:
+          BASE_PIN: ${{ steps.pins.outputs.base }}
+          HEAD_PIN: ${{ steps.pins.outputs.head }}
+        run: |
+          set -euo pipefail
+          work=$(mktemp -d)
+          for v in "$BASE_PIN" "$HEAD_PIN"; do
+            ( cd "$work" && npm pack "@4242labs/design-system@$v" --silent >/dev/null \
+              && mkdir -p "$v" && tar -xzf "4242labs-design-system-$v.tgz" -C "$v" )
+          done
+          : > "$work/report.txt"
+
+          # Stylesheets, shown in full: a moved token is a value a reviewer can read and
+          # judge. Comment lines carry the version and source commit, which differ on every
+          # release by construction, so they are stripped.
+          for f in tokens.css tailwind.css; do
+            diff <(grep -vE '^[[:space:]]*(/\*|\*)' "$work/$BASE_PIN/package/dist/$f") \
+                 <(grep -vE '^[[:space:]]*(/\*|\*)' "$work/$HEAD_PIN/package/dist/$f") \
+                 > "$work/d.txt" || true
+            if [ -s "$work/d.txt" ]; then
+              { echo "### $f"; echo '```diff'; cat "$work/d.txt"; echo '```'; } >> "$work/report.txt"
+            fi
+          done
+
+          # Components, named rather than shown: compiled JavaScript diffs are unreadable,
+          # and what a reviewer needs is which components to go and look at. Without this
+          # the gate would call a release that rewrote every component "renders nothing"
+          # and merge it, because only the two stylesheets were ever compared. `.d.ts` is
+          # deliberately excluded — it is types only, it renders nothing, and it churns
+          # between TypeScript versions.
+          # Only what renders: components, hooks and the class merger. `bin/` and `check/`
+          # are the compliance checker's own code and change on releases that move no
+          # pixel, and `.d.ts` is types only and churns between TypeScript versions.
+          # The two stylesheets are compared above instead, because their headers carry
+          # the version and a plain byte diff reports them on every release.
+          changed=""
+          for part in components hooks; do
+            changed="$changed$(diff -rq --exclude='*.d.ts' --exclude='*.map' \
+              "$work/$BASE_PIN/package/dist/$part" "$work/$HEAD_PIN/package/dist/$part" 2>/dev/null \
+              | sed -e "s|^Files .*/package/dist/||" -e 's| and .* differ$||' \
+                    -e "s|^Only in .*/package/dist/|added or removed: |" || true)
+          "
+          done
+          cmp -s "$work/$BASE_PIN/package/dist/utils.js" "$work/$HEAD_PIN/package/dist/utils.js" \
+            || changed="$changed
+          utils.js"
+          changed=$(printf '%s\n' "$changed" | sed 's/^[[:space:]]*//' | grep -v '^$' | sort -u || true)
+          if [ -n "$changed" ]; then
+            { echo "### components"; echo; echo "$changed" | sed 's/^/- `/; s/$/`/'; } >> "$work/report.txt"
+          fi
+          if [ -s "$work/report.txt" ]; then
+            echo "identical=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "identical=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "report=$work/report.txt" >> "$GITHUB_OUTPUT"
+
+      - name: Say what moved
+        if: steps.pins.outputs.moved == 'true' && steps.impact.outputs.identical == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          BASE_PIN: ${{ steps.pins.outputs.base }}
+          HEAD_PIN: ${{ steps.pins.outputs.head }}
+          REPORT: ${{ steps.impact.outputs.report }}
+        run: |
+          {
+            echo "## This bump changes what the app renders"
+            echo
+            echo "\`$BASE_PIN\` → \`$HEAD_PIN\`. What differs is listed below, so every surface that"
+            echo "uses it moves. A retrofit with visual evidence is owed before this merges."
+            echo
+            cat "$REPORT"
+          } > /tmp/body.md
+          gh pr comment "$PR" --body-file /tmp/body.md
+
+      # Every other check has to finish first. This job is a required check's dependant, so
+      # `ds` has already passed; the rest run beside it and are polled here rather than
+      # assumed. Anything red, and the merge does not happen.
+      - name: Wait for the other checks
+        if: steps.pins.outputs.moved == 'true' && steps.impact.outputs.identical == 'true'
+        id: others
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+          SELF: bump-impact
+        run: |
+          for _ in $(seq 1 40); do
+            runs=$(gh api "repos/$GITHUB_REPOSITORY/commits/$SHA/check-runs" --paginate \
+              --jq ".check_runs[] | select(.name != \"$SELF\") | \"\(.status):\(.conclusion // \"-\")\"")
+            if ! printf '%s\n' "$runs" | grep -qv '^completed:'; then
+              if printf '%s\n' "$runs" | grep -qvE '^completed:(success|neutral|skipped)$'; then
+                echo "green=false" >> "$GITHUB_OUTPUT"
+                printf '%s\n' "$runs"
+              else
+                echo "green=true" >> "$GITHUB_OUTPUT"
+              fi
+              exit 0
+            fi
+            sleep 20
+          done
+          echo "green=false" >> "$GITHUB_OUTPUT"
+          echo "Other checks did not finish in time."
+
+      # Narrow on purpose. Only a Renovate branch, only the two dependency files, only when
+      # the two releases render identically, and only with every other check green.
+      - name: Merge a bump that changes nothing
+        if: steps.pins.outputs.moved == 'true' && steps.impact.outputs.identical == 'true' && steps.others.outputs.green == 'true' && startsWith(github.head_ref, 'renovate/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          BASE_PIN: ${{ steps.pins.outputs.base }}
+          HEAD_PIN: ${{ steps.pins.outputs.head }}
+        run: |
+          set -euo pipefail
+          files=$(gh pr view "$PR" --json files --jq '[.files[].path] | sort | join(" ")')
+          if [ "$files" != "web/package-lock.json web/package.json" ]; then
+            echo "::error title=Not merging::this branch changes more than the pin: $files"
+            exit 1
+          fi
+          gh pr comment "$PR" --body "Merging: \`$BASE_PIN\` and \`$HEAD_PIN\` ship identical tokens and identical component code, so this moves a version number and nothing else."
+          gh pr merge "$PR" --squash --delete-branch
