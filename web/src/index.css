@@ -1,6 +1,6 @@
 @import "tailwindcss";
-@import "./ds-tokens.css";
-@import "./ds-tailwind.css";
+@import "@4242labs/design-system/tokens.css";
+@import "@4242labs/design-system/tailwind.css";
 
 @layer components {
   [data-slot="top-bar-inner"] {
