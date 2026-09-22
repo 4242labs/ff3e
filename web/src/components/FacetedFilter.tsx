@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Check, ChevronDown } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@4242labs/design-system/components/button'
 import {
   Command,
   CommandEmpty,
@@ -10,8 +10,8 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-} from '@/components/ui/command'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+} from '@4242labs/design-system/components/command'
+import { Popover, PopoverContent, PopoverTrigger } from '@4242labs/design-system/components/popover'
 import { cn } from '@/lib/utils'
 
 export interface FacetOption {

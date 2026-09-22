@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import json
-import os
 import re
 from pathlib import Path
 
@@ -12,7 +11,11 @@ ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "web"
 SRC = WEB / "src"
 UI = SRC / "components" / "ui"
-DS_RELEASE = "2.4.8"
+DS_RELEASE = "2.4.10"
+# The compliance checker's own version, deliberately pinned separately from
+# DS_RELEASE in the workflow: it is the binary that runs the gates, not the
+# pin the app renders, and moving it moves no pixel.
+DS_CHECKER_VERSION = "2.4.8"
 
 RAW_CONTROL = re.compile(r"<(button|input|select|textarea)(?:\s|>|/)")
 ARBITRARY_VALUE = re.compile(r"\b[a-z][a-z-]*-\[[^\]]+\]")
@@ -26,29 +29,10 @@ RAW_PALETTE_VAR = re.compile(
 SHADOW_CLASS = re.compile(r"(?<![\w-])shadow(?:-[\w\[\]-]+)?(?![\w-])")
 FULL_RADIUS = re.compile(r"(?<![\w-])rounded-full(?![\w-])")
 
-# These are upstream component source, not app-owned styling. The local candidate
-# compliance run byte-checks them against @42labs; everything else is scanned.
-ADOPTED_UI = {
-    "alert.tsx",
-    "badge.tsx",
-    "button.tsx",
-    "card.tsx",
-    "collapsible.tsx",
-    "input.tsx",
-    "pagination.tsx",
-    "progress.tsx",
-    "select.tsx",
-    "separator.tsx",
-    "sheet.tsx",
-    "sidebar.tsx",
-    "skeleton.tsx",
-    "table.tsx",
-    "theme-switch.tsx",
-    "toggle-group.tsx",
-    "toggle.tsx",
-    "tooltip.tsx",
-    "top-bar.tsx",
-}
+# Package mode, components too (42L-1913): every adopted primitive imports from
+# @4242labs/design-system now, and there is no local ui/ copy left to exclude
+# from the app-owned drift scan below.
+ADOPTED_UI: set[str] = set()
 
 
 def own_source_files() -> list[Path]:
@@ -101,7 +85,7 @@ def test_app_owned_source_has_no_visual_or_primitive_drift() -> None:
 
 def test_theme_switch_is_only_a_controller_for_the_adopted_component() -> None:
     controller = (SRC / "components" / "ThemeSwitch.tsx").read_text()
-    assert "@/components/ui/theme-switch" in controller
+    assert "@4242labs/design-system/components/theme-switch" in controller
     assert "<CanonicalThemeSwitch" in controller
     assert "ToggleGroup" not in controller
 
@@ -136,7 +120,7 @@ def test_permanent_rail_uses_complete_dark_roles_and_dark_assets() -> None:
     sidebar = (SRC / "components" / "AppSidebar.tsx").read_text()
     assert "buymeacoffee.com" in sidebar
     assert 'className="band-dark"' in sidebar
-    assert "@/components/brand-mark" in sidebar
+    assert "@4242labs/design-system/components/brand-mark" in sidebar
     assert "@/components/Brand" not in sidebar
 
 
@@ -159,7 +143,7 @@ def test_alfred_build_contract_is_exact_and_uses_npm_ci() -> None:
 
 def test_ci_pins_exact_ds_release_and_runs_provenance_and_browser_gates() -> None:
     workflow = (ROOT / ".github" / "workflows" / "ds-compliance.yml").read_text()
-    assert f"@4242labs/design-system@{DS_RELEASE}" in workflow
+    assert f"@4242labs/design-system@{DS_CHECKER_VERSION}" in workflow
     # The pin is read out of package.json, so a bump moves one file and goes green alone.
     assert '--expect "$PIN"' in workflow
     assert "--ui-dir src/components/ui" in workflow
@@ -193,16 +177,3 @@ def test_tokens_come_from_the_package_and_not_from_a_copy() -> None:
     assert '@import "@4242labs/design-system/tailwind.css";' in css
 
 
-def test_local_candidate_adopted_sources_are_byte_identical() -> None:
-    candidate = os.environ.get("DS_CANDIDATE")
-    if not candidate:
-        pytest.skip("set DS_CANDIDATE to byte-check the local design-system candidate")
-    ds_src = Path(candidate) / "src"
-    pairs = [(UI / name, ds_src / "components" / "ui" / name) for name in ADOPTED_UI]
-    pairs.append((SRC / "components" / "brand-mark.tsx", ds_src / "components" / "brand-mark.tsx"))
-    mismatches = [
-        str(local.relative_to(ROOT))
-        for local, canonical in pairs
-        if not canonical.is_file() or local.read_bytes() != canonical.read_bytes()
-    ]
-    assert mismatches == []

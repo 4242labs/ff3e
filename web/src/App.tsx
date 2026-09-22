@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { AppSidebar } from '@/components/AppSidebar'
 import { ForecastPage } from '@/components/ForecastPage'
 import { ReportsPage } from '@/components/ReportsPage'
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
+import { SidebarInset, SidebarProvider } from '@4242labs/design-system/components/sidebar'
 import type { AppView } from '@/lib/types'
 
 const VIEW_KEY = 'entropy:view'

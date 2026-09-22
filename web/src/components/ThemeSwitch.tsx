@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import {
   ThemeSwitch as CanonicalThemeSwitch,
   type ThemeSwitchTheme,
-} from '@/components/ui/theme-switch'
+} from '@4242labs/design-system/components/theme-switch'
 
 const STORAGE_KEY = 'entropy-theme'
 

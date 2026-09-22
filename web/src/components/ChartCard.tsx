@@ -1,9 +1,9 @@
 import { useState, type ReactNode } from 'react'
 import { Maximize2 } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Button } from '@4242labs/design-system/components/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@4242labs/design-system/components/card'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@4242labs/design-system/components/dialog'
 
 export interface ChartCardProps {
   title: string

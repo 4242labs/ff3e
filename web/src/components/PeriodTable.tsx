@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Card, CardContent, CardHeader, CardTitle } from '@4242labs/design-system/components/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@4242labs/design-system/components/table'
 import { StatusBadge } from '@/components/StatusBadge'
 import { FlagBadges } from '@/components/FlagBadges'
 import { EmptyState } from '@/components/EmptyState'

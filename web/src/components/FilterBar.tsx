@@ -1,6 +1,6 @@
 import { X } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@4242labs/design-system/components/button'
 import { FacetedFilter } from '@/components/FacetedFilter'
 import { EMPTY_FILTERS, hasActiveFilters, type FilterOptions } from '@/lib/filters'
 import type { ActiveFilters, ItemType } from '@/lib/types'

@@ -1,8 +1,8 @@
 import { useState } from 'react'
 
-import { Button } from '@/components/ui/button'
-import { Calendar } from '@/components/ui/calendar'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Button } from '@4242labs/design-system/components/button'
+import { Calendar } from '@4242labs/design-system/components/calendar'
+import { Popover, PopoverContent, PopoverTrigger } from '@4242labs/design-system/components/popover'
 import { formatDate } from '@/lib/format'
 import { anchorToDate, toISO } from '@/lib/range'
 
