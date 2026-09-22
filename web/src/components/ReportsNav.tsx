@@ -4,9 +4,9 @@ import { DateRangePicker } from '@/components/DateRangePicker'
 import { FacetedFilter } from '@/components/FacetedFilter'
 import { FilterBar } from '@/components/FilterBar'
 import { PeriodPicker } from '@/components/PeriodPicker'
-import { Button } from '@/components/ui/button'
-import { SidebarTrigger } from '@/components/ui/sidebar'
-import { TopBar, TopBarActions, TopBarRailLead } from '@/components/ui/top-bar'
+import { Button } from '@4242labs/design-system/components/button'
+import { SidebarTrigger } from '@4242labs/design-system/components/sidebar'
+import { TopBar, TopBarActions, TopBarRailLead } from '@4242labs/design-system/components/top-bar'
 import type { FilterOptions } from '@/lib/filters'
 import {
   isCustomPeriod,

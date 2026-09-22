@@ -1,10 +1,10 @@
 import { CalendarClock, ChevronRight, Github } from 'lucide-react'
 
-import { BrandMark } from '@/components/brand-mark'
+import { BrandMark } from '@4242labs/design-system/components/brand-mark'
 import { ThemeSwitch } from '@/components/ThemeSwitch'
 import { Wordmark } from '@/components/Wordmark'
-import { Button } from '@/components/ui/button'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { Button } from '@4242labs/design-system/components/button'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@4242labs/design-system/components/collapsible'
 import {
   Sidebar,
   SidebarContent,
@@ -20,7 +20,7 @@ import {
   SidebarMenuSubItem,
   SidebarRail,
   useSidebar,
-} from '@/components/ui/sidebar'
+} from '@4242labs/design-system/components/sidebar'
 import type { AppView } from '@/lib/types'
 
 const VIEWS: { key: AppView; label: string }[] = [

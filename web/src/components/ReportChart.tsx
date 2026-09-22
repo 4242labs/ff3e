@@ -1,8 +1,8 @@
 import { Fragment, useEffect, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@4242labs/design-system/components/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@4242labs/design-system/components/card'
 import { formatMoney } from '@/lib/format'
 import { FLOW_LABEL, pageCount, pageOf, type Flow, type ReportCard } from '@/lib/reports'
 

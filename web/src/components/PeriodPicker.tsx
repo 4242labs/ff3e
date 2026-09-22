@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
-import { Calendar } from '@/components/ui/calendar'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Button } from '@4242labs/design-system/components/button'
+import { Calendar } from '@4242labs/design-system/components/calendar'
+import { Popover, PopoverContent, PopoverTrigger } from '@4242labs/design-system/components/popover'
 import { anchorToDate, toISO } from '@/lib/range'
 import type { Granularity } from '@/lib/types'
 

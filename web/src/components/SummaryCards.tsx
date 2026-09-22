@@ -1,4 +1,4 @@
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent } from '@4242labs/design-system/components/card'
 import { formatMoney } from '@/lib/format'
 import type { ProjectionsResponse } from '@/lib/types'
 

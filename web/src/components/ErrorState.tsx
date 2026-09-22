@@ -1,6 +1,6 @@
 import { RotateCw } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@4242labs/design-system/components/button'
 
 export function ErrorState({
   message,
