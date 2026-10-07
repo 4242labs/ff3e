@@ -16,10 +16,11 @@ actually happened over a window (booked transactions, ranked). It writes nothing
 Firefly III, ever — there is no write path in the engine at all. Alfred's own touchpoint with
 ff3e's internals is narrower still: `receivables.py` reuses Entropy's
 `settles:<slug>:<YYYY-MM>` tag convention (`vendor/ff3e/server/forecast.py`) as the claim
-mechanism for matching a landed deposit to an open receivable, and `coming_due.py`/
-`fatura_ingest.py`/`settles_tag.py` all import the vendored `forecast.py` module directly rather
-than calling it over HTTP. Alfred must never invent a different tag shape or write a
-`settles:`/`cmt:`/instalment tag from anywhere but those existing modules.
+mechanism for matching a landed deposit to an open receivable; `coming_due.py` and
+`settles_tag.py` import the vendored `forecast.py` module directly rather than calling it over
+HTTP, while `fatura_ingest.py` only documents (in comments) the installment-tag convention it
+writes, without importing `forecast.py` itself. Alfred must never invent a different tag shape
+or write a `settles:`/`cmt:`/instalment tag from anywhere but those existing modules.
 
 ## Health check
 
