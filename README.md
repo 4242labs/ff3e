@@ -211,6 +211,12 @@ The entire Firefly III coupling is two functions in `server/forecast.py` —
 `fetch_recurrences()` and `fetch_transactions()`. Everything else is
 ledger-agnostic.
 
+## Agent guide
+
+`docs/agent-guide.md` — what this service does for Alfred, a health check,
+common failures, and things never to do (42L-2118 REQ-D1). Update it in the
+same PR as any behaviour change that would make it wrong (REQ-D3).
+
 ## Develop
 
 ```bash
